@@ -17,6 +17,21 @@ export interface Product {
   rating: number;
   isNew?: boolean;
   inStock: boolean;
+  description?: string;
+  details?: {
+    origin?: string;
+    weight?: string;
+    shelfLife?: string;
+    ingredients?: string;
+    nutrition?: {
+      servingSize?: string;
+      calories?: string;
+      protein?: string;
+      fat?: string;
+      carbohydrates?: string;
+      fiber?: string;
+    };
+  };
 }
 
 interface ProductCardProps {
