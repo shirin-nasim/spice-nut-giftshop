@@ -62,3 +62,20 @@ export const searchProducts = async (query: string): Promise<Product[]> => {
 
   return data as unknown as Product[];
 };
+
+// Get related products (products in the same category)
+export const getRelatedProducts = async (productId: string, category: string, limit: number = 4): Promise<Product[]> => {
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("category", category)
+    .neq("id", productId) // Exclude the current product
+    .limit(limit);
+
+  if (error) {
+    console.error("Error fetching related products:", error);
+    throw error;
+  }
+
+  return data as unknown as Product[];
+};
