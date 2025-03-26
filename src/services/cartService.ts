@@ -1,5 +1,33 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Cart, CartItem, Product } from "@/types/supabase";
+
+const LOCAL_CART_KEY = 'premium_market_cart';
+
+// Local storage cart persistence
+const saveCartToLocalStorage = (userId: string | null, items: CartItem[]) => {
+  try {
+    localStorage.setItem(LOCAL_CART_KEY, JSON.stringify({
+      userId,
+      items,
+      updatedAt: new Date().toISOString()
+    }));
+  } catch (error) {
+    console.error('Error saving cart to localStorage:', error);
+  }
+};
+
+const getCartFromLocalStorage = (): { userId: string | null, items: CartItem[] } => {
+  try {
+    const data = localStorage.getItem(LOCAL_CART_KEY);
+    if (data) {
+      return JSON.parse(data);
+    }
+  } catch (error) {
+    console.error('Error loading cart from localStorage:', error);
+  }
+  return { userId: null, items: [] };
+};
 
 // Get or create cart for user
 export const getOrCreateCart = async (userId: string): Promise<Cart> => {
@@ -60,7 +88,7 @@ export const getCartItems = async (cartId: string): Promise<CartItem[]> => {
     throw error;
   }
 
-  return data.map((item: any) => ({
+  const cartItems = data.map((item: any) => ({
     id: item.id,
     cartId: item.cart_id,
     productId: item.product_id,
@@ -69,6 +97,44 @@ export const getCartItems = async (cartId: string): Promise<CartItem[]> => {
     createdAt: item.created_at,
     updatedAt: item.updated_at
   }));
+
+  // Save to localStorage for persistence
+  saveCartToLocalStorage(null, cartItems);
+
+  return cartItems;
+};
+
+// Get cart items for guest
+export const getGuestCartItems = async (): Promise<CartItem[]> => {
+  const { items } = getCartFromLocalStorage();
+  
+  if (!items || items.length === 0) {
+    return [];
+  }
+  
+  // Fetch the latest product data for all items in the cart
+  const productIds = items.map(item => item.productId);
+  
+  const { data: products, error } = await supabase
+    .from("products")
+    .select("*")
+    .in("id", productIds);
+    
+  if (error) {
+    console.error("Error fetching product data for guest cart:", error);
+    return items; // Return the cached items even without updated product data
+  }
+  
+  // Match products with cart items
+  const updatedItems = items.map(item => {
+    const product = products.find(p => p.id === item.productId);
+    return {
+      ...item,
+      product: product || item.product // Keep the old product data if we couldn't fetch a new one
+    };
+  });
+  
+  return updatedItems;
 };
 
 // Add item to cart
@@ -86,6 +152,8 @@ export const addToCart = async (cartId: string, productId: string, quantity: num
     throw fetchError;
   }
 
+  let result;
+  
   if (existingItem) {
     // Update quantity if item exists
     const { data, error } = await supabase
@@ -100,7 +168,7 @@ export const addToCart = async (cartId: string, productId: string, quantity: num
       throw error;
     }
 
-    return {
+    result = {
       id: data.id,
       cartId: data.cart_id,
       productId: data.product_id,
@@ -125,7 +193,7 @@ export const addToCart = async (cartId: string, productId: string, quantity: num
       throw error;
     }
 
-    return {
+    result = {
       id: data.id,
       cartId: data.cart_id,
       productId: data.product_id,
@@ -134,6 +202,53 @@ export const addToCart = async (cartId: string, productId: string, quantity: num
       updatedAt: data.updated_at
     };
   }
+  
+  // Fetch all cart items to update localStorage
+  const allCartItems = await getCartItems(cartId);
+  saveCartToLocalStorage(null, allCartItems);
+  
+  return result;
+};
+
+// Add item to guest cart
+export const addToGuestCart = async (productId: string, quantity: number = 1): Promise<CartItem[]> => {
+  // Fetch product data
+  const { data: product, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("id", productId)
+    .single();
+    
+  if (error) {
+    console.error("Error fetching product for guest cart:", error);
+    throw error;
+  }
+  
+  const { items } = getCartFromLocalStorage();
+  
+  // Check if the product already exists in the cart
+  const existingItemIndex = items.findIndex(item => item.productId === productId);
+  
+  if (existingItemIndex >= 0) {
+    // Update quantity
+    items[existingItemIndex].quantity += quantity;
+  } else {
+    // Add new item
+    const newItem: CartItem = {
+      id: `local-${Date.now()}`,
+      cartId: 'guest-cart',
+      productId: product.id,
+      quantity: quantity,
+      product: product,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    items.push(newItem);
+  }
+  
+  saveCartToLocalStorage(null, items);
+  return items;
 };
 
 // Update cart item quantity
@@ -147,10 +262,45 @@ export const updateCartItemQuantity = async (itemId: string, quantity: number): 
     console.error("Error updating cart item quantity:", error);
     throw error;
   }
+  
+  // Fetch the cart ID from the item
+  const { data: cartItem } = await supabase
+    .from("cart_items")
+    .select("cart_id")
+    .eq("id", itemId)
+    .single();
+    
+  if (cartItem) {
+    // Update localStorage with latest cart data
+    const cartItems = await getCartItems(cartItem.cart_id);
+    saveCartToLocalStorage(null, cartItems);
+  }
+};
+
+// Update guest cart item quantity
+export const updateGuestCartItemQuantity = (itemId: string, quantity: number): CartItem[] => {
+  const { items } = getCartFromLocalStorage();
+  
+  const updatedItems = items.map(item => {
+    if (item.id === itemId) {
+      return { ...item, quantity, updatedAt: new Date().toISOString() };
+    }
+    return item;
+  });
+  
+  saveCartToLocalStorage(null, updatedItems);
+  return updatedItems;
 };
 
 // Remove item from cart
 export const removeFromCart = async (itemId: string): Promise<void> => {
+  // Get cart ID before deleting
+  const { data: cartItem } = await supabase
+    .from("cart_items")
+    .select("cart_id")
+    .eq("id", itemId)
+    .single();
+    
   const { error } = await supabase
     .from("cart_items")
     .delete()
@@ -160,6 +310,22 @@ export const removeFromCart = async (itemId: string): Promise<void> => {
     console.error("Error removing item from cart:", error);
     throw error;
   }
+  
+  if (cartItem) {
+    // Update localStorage with latest cart data
+    const cartItems = await getCartItems(cartItem.cart_id);
+    saveCartToLocalStorage(null, cartItems);
+  }
+};
+
+// Remove item from guest cart
+export const removeFromGuestCart = (itemId: string): CartItem[] => {
+  const { items } = getCartFromLocalStorage();
+  
+  const updatedItems = items.filter(item => item.id !== itemId);
+  
+  saveCartToLocalStorage(null, updatedItems);
+  return updatedItems;
 };
 
 // Clear cart
@@ -173,4 +339,48 @@ export const clearCart = async (cartId: string): Promise<void> => {
     console.error("Error clearing cart:", error);
     throw error;
   }
+  
+  // Clear localStorage cart
+  saveCartToLocalStorage(null, []);
+};
+
+// Merge guest cart with user cart
+export const mergeGuestCartWithUserCart = async (userId: string): Promise<void> => {
+  const { items: guestItems } = getCartFromLocalStorage();
+  
+  if (!guestItems || guestItems.length === 0) {
+    return; // No guest items to merge
+  }
+  
+  try {
+    // Get or create the user's cart
+    const cart = await getOrCreateCart(userId);
+    
+    // Add each guest item to the user's cart
+    for (const item of guestItems) {
+      await addToCart(cart.id, item.productId, item.quantity);
+    }
+    
+    // Clear the guest cart after merging
+    saveCartToLocalStorage(userId, []);
+  } catch (error) {
+    console.error("Error merging guest cart with user cart:", error);
+    throw error;
+  }
+};
+
+// Initialize cart from localStorage for guests or new sessions
+export const initializeCartFromStorage = async (userId: string | null): Promise<CartItem[]> => {
+  const { userId: storedUserId, items } = getCartFromLocalStorage();
+  
+  // If user is logged in and we have a stored cart for a different or no user,
+  // migrate the cart to the current user
+  if (userId && (!storedUserId || storedUserId !== userId)) {
+    if (items.length > 0) {
+      await mergeGuestCartWithUserCart(userId);
+    }
+    return [];
+  }
+  
+  return items;
 };

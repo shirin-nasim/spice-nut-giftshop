@@ -1,4 +1,3 @@
-
 import { Database } from "@/integrations/supabase/types";
 
 // Product type that matches our database schema
@@ -109,6 +108,31 @@ export interface UserProfile {
   country?: string;
   createdAt?: string;
   updatedAt?: string;
+}
+
+// Review type
+export interface Review {
+  id: string;
+  productId: string;
+  userId: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+  user?: {
+    id: string;
+    firstName?: string;
+    lastName?: string;
+  };
+}
+
+// RecentlyViewedProduct type
+export interface RecentlyViewedProduct {
+  id: string;
+  name: string;
+  price: number;
+  image: string;
+  category: string;
+  viewedAt: number; // timestamp
 }
 
 // Helper type for Supabase query responses

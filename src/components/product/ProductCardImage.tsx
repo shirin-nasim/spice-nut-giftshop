@@ -2,6 +2,7 @@
 import React from "react";
 import ProductBadge from "./ProductBadge";
 import ProductCardActions from "./ProductCardActions";
+import LazyImage from "@/components/ui/LazyImage";
 
 interface ProductCardImageProps {
   image: string;
@@ -30,10 +31,10 @@ const ProductCardImage: React.FC<ProductCardImageProps> = ({
 }) => {
   return (
     <div className="relative aspect-square overflow-hidden">
-      <img 
+      <LazyImage 
         src={image} 
         alt={name}
-        className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+        className="w-full h-full transition-transform duration-700 ease-out group-hover:scale-105"
       />
       
       <ProductBadge isNew={isNew} discount={discount} badge={badge} />

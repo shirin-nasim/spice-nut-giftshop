@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -10,11 +9,14 @@ import ProductImageGallery from "@/components/product/ProductImageGallery";
 import ProductInfo from "@/components/product/ProductInfo";
 import ProductTabs from "@/components/product/ProductTabs";
 import RelatedProducts from "@/components/product/RelatedProducts";
+import RecentlyViewedProducts from "@/components/product/RecentlyViewedProducts";
 import ProductBreadcrumb from "@/components/product/ProductBreadcrumb";
 import { getProductById } from "@/services/productService";
+import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 
 const ProductDetail = () => {
   const { productId } = useParams<{ productId: string }>();
+  const { recentlyViewed, addToRecentlyViewed } = useRecentlyViewed();
   
   // Weight options
   const weightOptions = [
@@ -42,6 +44,13 @@ const ProductDetail = () => {
     window.scrollTo(0, 0);
   }, [productId]);
 
+  // Add to recently viewed when product loads
+  useEffect(() => {
+    if (product) {
+      addToRecentlyViewed(product);
+    }
+  }, [product, addToRecentlyViewed]);
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen flex-col">
@@ -49,12 +58,10 @@ const ProductDetail = () => {
         <main className="flex-grow pt-24 pb-10">
           <div className="premium-container">
             <div className="animate-pulse">
-              {/* Skeleton for breadcrumb */}
               <div className="mb-6">
                 <Skeleton className="h-4 w-1/3" />
               </div>
               
-              {/* Skeleton for product details */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-16">
                 <Skeleton className="h-[500px] rounded-xl" />
                 <div className="space-y-4">
@@ -81,7 +88,6 @@ const ProductDetail = () => {
                 </div>
               </div>
               
-              {/* Skeleton for tabs */}
               <div className="mb-16">
                 <div className="flex space-x-4 mb-6">
                   <Skeleton className="h-10 w-24" />
@@ -122,31 +128,34 @@ const ProductDetail = () => {
       <Header />
       <main className="flex-grow pt-24 pb-10">
         <div className="premium-container">
-          {/* Breadcrumb */}
           <ProductBreadcrumb productName={product.name} category={product.category} />
 
-          {/* Product Details */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-16 animate-fade-in">
-            {/* Product Images */}
             <ProductImageGallery 
               mainImage={product.image} 
               additionalImages={additionalImages} 
               productName={product.name} 
             />
 
-            {/* Product Info */}
             <ProductInfo product={product} weightOptions={weightOptions} />
           </div>
 
-          {/* Product Details Tabs */}
           <div className="mb-16 animate-fade-in">
             <ProductTabs product={product} />
           </div>
 
-          {/* Related Products */}
           <div className="animate-fade-in">
             <RelatedProducts productId={product.id} category={product.category} />
           </div>
+          
+          {recentlyViewed.length > 1 && (
+            <div className="animate-fade-in">
+              <RecentlyViewedProducts 
+                products={recentlyViewed} 
+                currentProductId={product.id} 
+              />
+            </div>
+          )}
         </div>
       </main>
       <Footer />

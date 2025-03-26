@@ -1,7 +1,12 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { CartItem } from "@/types/supabase";
-import { getOrCreateCart, getCartItems } from "@/services/cartService";
+import { 
+  getOrCreateCart, 
+  getCartItems, 
+  getGuestCartItems,
+  initializeCartFromStorage
+} from "@/services/cartService";
 import { useAuth } from "@/hooks/useAuth";
 
 interface CartContextType {
@@ -20,17 +25,27 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
 
   const fetchCart = async () => {
-    if (!user) {
-      setCartItems([]);
-      setIsLoading(false);
-      return;
-    }
-
     try {
       setIsLoading(true);
-      const cart = await getOrCreateCart(user.id);
-      const items = await getCartItems(cart.id);
-      setCartItems(items);
+      
+      if (user) {
+        // For authenticated users
+        const cart = await getOrCreateCart(user.id);
+        
+        // Initialize from localStorage first to show items quickly
+        const localItems = await initializeCartFromStorage(user.id);
+        if (localItems.length > 0) {
+          setCartItems(localItems);
+        }
+        
+        // Then fetch the latest items from the database
+        const items = await getCartItems(cart.id);
+        setCartItems(items);
+      } else {
+        // For guests
+        const guestItems = await getGuestCartItems();
+        setCartItems(guestItems);
+      }
     } catch (error) {
       console.error("Error fetching cart:", error);
       setCartItems([]);

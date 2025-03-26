@@ -1,5 +1,6 @@
 
 import React, { useState } from "react";
+import LazyImage from "@/components/ui/LazyImage";
 
 interface ProductImageGalleryProps {
   mainImage: string;
@@ -17,10 +18,10 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({
   return (
     <div className="space-y-4">
       <div className="bg-white rounded-xl overflow-hidden aspect-square shadow-premium-sm hover:shadow-premium-md transition-shadow">
-        <img 
+        <LazyImage 
           src={mainImage} 
           alt={productName}
-          className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
+          className="w-full h-full hover:scale-105 transition-transform duration-700"
         />
       </div>
       <div className="grid grid-cols-4 gap-4">
@@ -32,10 +33,10 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({
             }`}
             onClick={() => setMainImage(img)}
           >
-            <img 
+            <LazyImage 
               src={img} 
               alt={`${productName} view ${index + 1}`}
-              className="w-full h-full object-cover"
+              className="w-full h-full"
             />
           </button>
         ))}
