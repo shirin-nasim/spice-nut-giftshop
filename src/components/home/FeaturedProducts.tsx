@@ -3,7 +3,8 @@ import React from "react";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import ProductCard, { Product } from "@/components/ui/ProductCard";
+import ProductCard from "@/components/ui/ProductCard";
+import { Product } from "@/types/supabase";
 
 // Sample products data
 const featuredProducts: Product[] = [

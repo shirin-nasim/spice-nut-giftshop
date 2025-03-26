@@ -7,7 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import ProductCard, { Product } from "@/components/ui/ProductCard";
+import ProductCard from "@/components/ui/ProductCard";
+import { Product } from "@/types/supabase";
 import { useToast } from "@/hooks/use-toast";
 
 // Sample product data - in a real app, this would come from an API

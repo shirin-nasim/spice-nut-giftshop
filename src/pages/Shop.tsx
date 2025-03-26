@@ -5,7 +5,8 @@ import { ChevronDown, Filter, Grid, List, SlidersHorizontal, X } from "lucide-re
 import { Button } from "@/components/ui/button";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import ProductCard, { Product } from "@/components/ui/ProductCard";
+import ProductCard from "@/components/ui/ProductCard";
+import { Product } from "@/types/supabase";
 import {
   Select,
   SelectContent,
