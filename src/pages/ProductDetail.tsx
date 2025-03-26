@@ -12,7 +12,7 @@ import { Product } from "@/types/supabase";
 import { useToast } from "@/hooks/use-toast";
 
 // Sample product data - in a real app, this would come from an API
-const products: Product[] = [
+const products: (Product & { details?: any })[] = [
   {
     id: "premium-almonds",
     name: "Premium California Almonds",

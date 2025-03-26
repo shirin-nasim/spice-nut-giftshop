@@ -19,6 +19,7 @@ export interface Product {
   shelfLife?: string;
   ingredients?: string;
   stockQuantity?: number;
+  details?: any; // Adding details property to fix the type error
   nutrition?: {
     servingSize?: string;
     calories?: string;
