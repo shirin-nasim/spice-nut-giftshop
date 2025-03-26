@@ -5,34 +5,10 @@ import { motion } from "framer-motion";
 import { ShoppingCart, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-
-export interface Product {
-  id: string;
-  name: string;
-  price: number;
-  originalPrice?: number;
-  image: string;
-  category: string;
-  badge?: string;
-  rating: number;
-  isNew?: boolean;
-  inStock: boolean;
-  description?: string;
-  details?: {
-    origin?: string;
-    weight?: string;
-    shelfLife?: string;
-    ingredients?: string;
-    nutrition?: {
-      servingSize?: string;
-      calories?: string;
-      protein?: string;
-      fat?: string;
-      carbohydrates?: string;
-      fiber?: string;
-    };
-  };
-}
+import { addToCart, getOrCreateCart } from "@/services/cartService";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { Product } from "@/types/supabase";
 
 interface ProductCardProps {
   product: Product;
@@ -41,29 +17,103 @@ interface ProductCardProps {
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [isAddingToWishlist, setIsAddingToWishlist] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
+  
   const discount = product.originalPrice 
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) 
     : 0;
 
-  const handleAddToCart = (e: React.MouseEvent) => {
+  const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
-    toast({
-      title: "Added to cart",
-      description: `${product.name} has been added to your cart.`,
-    });
+    if (!user) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to add items to your cart",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      setIsAddingToCart(true);
+      const cart = await getOrCreateCart(user.id);
+      await addToCart(cart.id, product.id);
+      
+      toast({
+        title: "Added to cart",
+        description: `${product.name} has been added to your cart.`,
+      });
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      toast({
+        title: "Failed to add to cart",
+        description: "There was an error adding this item to your cart.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAddingToCart(false);
+    }
   };
 
-  const handleAddToWishlist = (e: React.MouseEvent) => {
+  const handleAddToWishlist = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
-    toast({
-      title: "Added to wishlist",
-      description: `${product.name} has been added to your wishlist.`,
-    });
+    if (!user) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to add items to your wishlist",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      setIsAddingToWishlist(true);
+      
+      // Check if already in wishlist
+      const { data: existingItem } = await supabase
+        .from("wishlist")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("product_id", product.id)
+        .maybeSingle();
+      
+      if (existingItem) {
+        toast({
+          title: "Already in wishlist",
+          description: `${product.name} is already in your wishlist.`,
+        });
+        return;
+      }
+      
+      // Add to wishlist
+      await supabase
+        .from("wishlist")
+        .insert({
+          user_id: user.id,
+          product_id: product.id
+        });
+      
+      toast({
+        title: "Added to wishlist",
+        description: `${product.name} has been added to your wishlist.`,
+      });
+    } catch (error) {
+      console.error("Error adding to wishlist:", error);
+      toast({
+        title: "Failed to add to wishlist",
+        description: "There was an error adding this item to your wishlist.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAddingToWishlist(false);
+    }
   };
 
   return (
@@ -117,16 +167,18 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
                   size="icon"
                   className="bg-white hover:bg-brand-brown hover:text-white transition-colors rounded-full shadow-premium-sm"
                   onClick={handleAddToCart}
+                  disabled={isAddingToCart}
                 >
-                  <ShoppingCart className="h-4 w-4" />
+                  <ShoppingCart className={`h-4 w-4 ${isAddingToCart ? "animate-pulse" : ""}`} />
                 </Button>
                 <Button
                   size="icon"
                   variant="outline"
                   className="bg-white hover:bg-brand-brown hover:text-white border-0 transition-colors rounded-full shadow-premium-sm"
                   onClick={handleAddToWishlist}
+                  disabled={isAddingToWishlist}
                 >
-                  <Heart className="h-4 w-4" />
+                  <Heart className={`h-4 w-4 ${isAddingToWishlist ? "animate-pulse" : ""}`} />
                 </Button>
               </div>
             </div>

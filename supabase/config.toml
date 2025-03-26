@@ -1,1 +1,4 @@
+
 project_id = "vwavxfqplapjoofwbbrt"
+[functions.seed-products]
+verify_jwt = false
