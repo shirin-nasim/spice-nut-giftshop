@@ -28,7 +28,7 @@ const ProductDetail = () => {
     { value: "1kg", price: 22.99 },
   ];
 
-  // Image gallery
+  // Image gallery - these are additional images that will be shown alongside the main product image
   const additionalImages = [
     "https://images.unsplash.com/photo-1574184864703-3487b13f0edd?q=80&w=1932&auto=format&fit=crop",
     "https://images.unsplash.com/photo-1640635265830-99029cdbb922?q=80&w=1974&auto=format&fit=crop",

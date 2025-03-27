@@ -6,7 +6,8 @@ import { Product } from "@/types/supabase";
 export const getProducts = async (): Promise<Product[]> => {
   const { data, error } = await supabase
     .from("products")
-    .select("*");
+    .select("*")
+    .order("name");
 
   if (error) {
     console.error("Error fetching products:", error);
@@ -14,6 +15,32 @@ export const getProducts = async (): Promise<Product[]> => {
   }
 
   return data as unknown as Product[];
+};
+
+// Get products with pagination
+export const getPaginatedProducts = async (
+  page: number = 1,
+  pageSize: number = 12
+): Promise<{ products: Product[], total: number }> => {
+  // Calculate the starting point
+  const start = (page - 1) * pageSize;
+  
+  // Get products with pagination
+  const { data, error, count } = await supabase
+    .from("products")
+    .select("*", { count: "exact" })
+    .order("name")
+    .range(start, start + pageSize - 1);
+
+  if (error) {
+    console.error("Error fetching paginated products:", error);
+    throw error;
+  }
+
+  return { 
+    products: data as unknown as Product[], 
+    total: count || 0 
+  };
 };
 
 // Get product by ID or slug
@@ -36,12 +63,16 @@ export const getProductById = async (productId: string): Promise<Product | null>
     return data as unknown as Product;
   } 
   
-  // If not UUID, try by slug (converted from productId)
-  // Convert slug like "saffron-premium" to name like "Pure Premium Saffron Threads"
+  // If not UUID, try by name - first convert slug to name-like format
+  // Convert slug like "saffron-premium" to a search term
+  const searchTerm = productId.replace(/-/g, ' ');
+  console.log("Searching for product with term:", searchTerm);
+  
   const { data, error } = await supabase
     .from("products")
     .select("*")
-    .ilike("name", `%${productId.split('-').join(' ')}%`)
+    .ilike("name", `%${searchTerm}%`)
+    .order("name")
     .maybeSingle();
 
   if (error && error.code !== "PGRST116") {
@@ -57,7 +88,8 @@ export const getProductsByCategory = async (category: string): Promise<Product[]
   const { data, error } = await supabase
     .from("products")
     .select("*")
-    .eq("category", category);
+    .eq("category", category)
+    .order("name");
 
   if (error) {
     console.error("Error fetching products by category:", error);
@@ -72,7 +104,7 @@ export const searchProducts = async (query: string): Promise<Product[]> => {
   const { data, error } = await supabase
     .from("products")
     .select("*")
-    .ilike("name", `%${query}%`)
+    .or(`name.ilike.%${query}%, description.ilike.%${query}%, category.ilike.%${query}%`)
     .order("name");
 
   if (error) {
