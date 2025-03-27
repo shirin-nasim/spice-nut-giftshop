@@ -13,7 +13,7 @@ export const getProductReviews = async (productId: string): Promise<Review[]> =>
       rating,
       comment,
       created_at,
-      profiles:user_id (id, first_name, last_name)
+      user:profiles!user_id(id, first_name, last_name)
     `)
     .eq("product_id", productId)
     .order("created_at", { ascending: false });
@@ -31,10 +31,10 @@ export const getProductReviews = async (productId: string): Promise<Review[]> =>
     rating: item.rating,
     comment: item.comment,
     createdAt: item.created_at,
-    user: item.profiles ? {
-      id: item.profiles.id,
-      firstName: item.profiles.first_name,
-      lastName: item.profiles.last_name
+    user: item.user ? {
+      id: item.user.id,
+      firstName: item.user.first_name,
+      lastName: item.user.last_name
     } : undefined
   }));
 };
