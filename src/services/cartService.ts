@@ -4,6 +4,33 @@ import { Cart, CartItem, Product } from "@/types/supabase";
 
 const LOCAL_CART_KEY = 'premium_market_cart';
 
+// Helper function to map database product to our Product type
+const mapProductFromDb = (dbProduct: any): Product => {
+  if (!dbProduct) return null as unknown as Product;
+  
+  return {
+    id: dbProduct.id,
+    name: dbProduct.name,
+    price: dbProduct.price,
+    originalPrice: dbProduct.original_price,
+    image: dbProduct.image,
+    category: dbProduct.category,
+    badge: dbProduct.badge,
+    rating: dbProduct.rating,
+    isNew: dbProduct.is_new,
+    inStock: dbProduct.in_stock,
+    description: dbProduct.description,
+    origin: dbProduct.origin,
+    weight: dbProduct.weight,
+    shelfLife: dbProduct.shelf_life,
+    ingredients: dbProduct.ingredients,
+    stockQuantity: dbProduct.stock_quantity,
+    nutrition: dbProduct.nutrition,
+    createdAt: dbProduct.created_at,
+    updatedAt: dbProduct.updated_at
+  };
+};
+
 // Local storage cart persistence
 const saveCartToLocalStorage = (userId: string | null, items: CartItem[]) => {
   try {
@@ -93,7 +120,7 @@ export const getCartItems = async (cartId: string): Promise<CartItem[]> => {
     cartId: item.cart_id,
     productId: item.product_id,
     quantity: item.quantity,
-    product: item.product as Product,
+    product: mapProductFromDb(item.product),
     createdAt: item.created_at,
     updatedAt: item.updated_at
   }));
@@ -127,10 +154,10 @@ export const getGuestCartItems = async (): Promise<CartItem[]> => {
   
   // Match products with cart items
   const updatedItems = items.map(item => {
-    const product = products.find(p => p.id === item.productId);
+    const dbProduct = products.find(p => p.id === item.productId);
     return {
       ...item,
-      product: product || item.product // Keep the old product data if we couldn't fetch a new one
+      product: dbProduct ? mapProductFromDb(dbProduct) : item.product
     };
   });
   
@@ -213,7 +240,7 @@ export const addToCart = async (cartId: string, productId: string, quantity: num
 // Add item to guest cart
 export const addToGuestCart = async (productId: string, quantity: number = 1): Promise<CartItem[]> => {
   // Fetch product data
-  const { data: product, error } = await supabase
+  const { data: dbProduct, error } = await supabase
     .from("products")
     .select("*")
     .eq("id", productId)
@@ -234,6 +261,8 @@ export const addToGuestCart = async (productId: string, quantity: number = 1): P
     items[existingItemIndex].quantity += quantity;
   } else {
     // Add new item
+    const product = mapProductFromDb(dbProduct);
+    
     const newItem: CartItem = {
       id: `local-${Date.now()}`,
       cartId: 'guest-cart',

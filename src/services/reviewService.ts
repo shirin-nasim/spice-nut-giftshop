@@ -7,7 +7,12 @@ export const getProductReviews = async (productId: string): Promise<Review[]> =>
   const { data, error } = await supabase
     .from("product_reviews")
     .select(`
-      *,
+      id,
+      product_id,
+      user_id,
+      rating,
+      comment,
+      created_at,
       user:user_id (id, first_name, last_name)
     `)
     .eq("product_id", productId)
@@ -18,7 +23,20 @@ export const getProductReviews = async (productId: string): Promise<Review[]> =>
     throw error;
   }
 
-  return data as unknown as Review[];
+  // Transform the data to match our Review type
+  return data.map(item => ({
+    id: item.id,
+    productId: item.product_id,
+    userId: item.user_id,
+    rating: item.rating,
+    comment: item.comment,
+    createdAt: item.created_at,
+    user: item.user ? {
+      id: item.user.id,
+      firstName: item.user.first_name,
+      lastName: item.user.last_name
+    } : undefined
+  }));
 };
 
 // Add a review
@@ -47,7 +65,14 @@ export const addReview = async (
   // Update product average rating
   await updateProductRating(productId);
 
-  return data as unknown as Review;
+  return {
+    id: data.id,
+    productId: data.product_id,
+    userId: data.user_id,
+    rating: data.rating,
+    comment: data.comment,
+    createdAt: data.created_at
+  };
 };
 
 // Update a review
@@ -72,7 +97,14 @@ export const updateReview = async (
   const productId = data.product_id;
   await updateProductRating(productId);
 
-  return data as unknown as Review;
+  return {
+    id: data.id,
+    productId: data.product_id,
+    userId: data.user_id,
+    rating: data.rating,
+    comment: data.comment,
+    createdAt: data.created_at
+  };
 };
 
 // Delete a review

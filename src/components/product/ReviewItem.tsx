@@ -2,18 +2,10 @@
 import React from "react";
 import { format } from "date-fns";
 import { Star } from "lucide-react";
+import { Review } from "@/types/supabase";
 
 interface ReviewItemProps {
-  review: {
-    id: string;
-    rating: number;
-    comment: string;
-    createdAt: string;
-    user?: {
-      firstName?: string;
-      lastName?: string;
-    };
-  };
+  review: Review;
 }
 
 const ReviewItem: React.FC<ReviewItemProps> = ({ review }) => {
