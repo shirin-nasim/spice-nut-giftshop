@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -17,6 +18,7 @@ import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 const ProductDetail = () => {
   const { productId } = useParams<{ productId: string }>();
   const { recentlyViewed, addToRecentlyViewed } = useRecentlyViewed();
+  const navigate = useNavigate();
   
   // Weight options
   const weightOptions = [
@@ -128,31 +130,31 @@ const ProductDetail = () => {
       <Header />
       <main className="flex-grow pt-24 pb-10">
         <div className="premium-container">
-          <ProductBreadcrumb productName={product.name} category={product.category} />
+          <ProductBreadcrumb productName={product?.name || ''} category={product?.category || ''} />
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-16 animate-fade-in">
             <ProductImageGallery 
-              mainImage={product.image} 
+              mainImage={product?.image || ''} 
               additionalImages={additionalImages} 
-              productName={product.name} 
+              productName={product?.name || ''} 
             />
 
-            <ProductInfo product={product} weightOptions={weightOptions} />
+            <ProductInfo product={product || {}} weightOptions={weightOptions} />
           </div>
 
           <div className="mb-16 animate-fade-in">
-            <ProductTabs product={product} />
+            <ProductTabs product={product || {}} />
           </div>
 
           <div className="animate-fade-in">
-            <RelatedProducts productId={product.id} category={product.category} />
+            <RelatedProducts productId={product?.id || ''} category={product?.category || ''} />
           </div>
           
           {recentlyViewed.length > 1 && (
             <div className="animate-fade-in">
               <RecentlyViewedProducts 
                 products={recentlyViewed} 
-                currentProductId={product.id} 
+                currentProductId={product?.id || ''} 
               />
             </div>
           )}
