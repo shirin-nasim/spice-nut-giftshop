@@ -13,7 +13,7 @@ export const getProductReviews = async (productId: string): Promise<Review[]> =>
       rating,
       comment,
       created_at,
-      profiles:user_id(id, first_name, last_name)
+      profiles(id, first_name, last_name)
     `)
     .eq("product_id", productId)
     .order("created_at", { ascending: false });
