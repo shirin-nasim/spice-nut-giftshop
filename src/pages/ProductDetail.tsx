@@ -14,6 +14,7 @@ import RecentlyViewedProducts from "@/components/product/RecentlyViewedProducts"
 import ProductBreadcrumb from "@/components/product/ProductBreadcrumb";
 import { getProductById } from "@/services/productService";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
+import { Product } from "@/types/supabase";
 
 const ProductDetail = () => {
   const { productId } = useParams<{ productId: string }>();
@@ -125,36 +126,39 @@ const ProductDetail = () => {
     );
   }
 
+  // Create a properly typed product object to pass to components
+  const typedProduct: Product = product as Product;
+
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
       <main className="flex-grow pt-24 pb-10">
         <div className="premium-container">
-          <ProductBreadcrumb productName={product?.name || ''} category={product?.category || ''} />
+          <ProductBreadcrumb productName={typedProduct.name || ''} category={typedProduct.category || ''} />
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-16 animate-fade-in">
             <ProductImageGallery 
-              mainImage={product?.image || ''} 
+              mainImage={typedProduct.image || ''} 
               additionalImages={additionalImages} 
-              productName={product?.name || ''} 
+              productName={typedProduct.name || ''} 
             />
 
-            <ProductInfo product={product || {}} weightOptions={weightOptions} />
+            <ProductInfo product={typedProduct} weightOptions={weightOptions} />
           </div>
 
           <div className="mb-16 animate-fade-in">
-            <ProductTabs product={product || {}} />
+            <ProductTabs product={typedProduct} />
           </div>
 
           <div className="animate-fade-in">
-            <RelatedProducts productId={product?.id || ''} category={product?.category || ''} />
+            <RelatedProducts productId={typedProduct.id || ''} category={typedProduct.category || ''} />
           </div>
           
           {recentlyViewed.length > 1 && (
             <div className="animate-fade-in">
               <RecentlyViewedProducts 
                 products={recentlyViewed} 
-                currentProductId={product?.id || ''} 
+                currentProductId={typedProduct.id || ''} 
               />
             </div>
           )}
