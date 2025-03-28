@@ -4,6 +4,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "@/hooks/use-toast";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import ProductImageGallery from "@/components/product/ProductImageGallery";
@@ -39,8 +40,26 @@ const ProductDetail = () => {
   // Fetch product data using React Query
   const { data: product, isLoading, error } = useQuery({
     queryKey: ['product', productId],
-    queryFn: () => getProductById(productId || ''),
+    queryFn: async () => {
+      if (!productId) return null;
+      
+      console.log(`Fetching product with ID/slug: ${productId}`);
+      try {
+        const result = await getProductById(productId);
+        console.log("Product fetch result:", result);
+        return result;
+      } catch (err) {
+        console.error("Error fetching product:", err);
+        toast({
+          title: "Error",
+          description: "Could not load product details. Please try again later.",
+          variant: "destructive",
+        });
+        throw err;
+      }
+    },
     enabled: !!productId,
+    retry: 1,
   });
 
   useEffect(() => {
@@ -114,9 +133,15 @@ const ProductDetail = () => {
         <main className="flex-grow pt-24 pb-10">
           <div className="premium-container">
             <div className="text-center py-20">
-              <p className="text-xl text-muted-foreground">Product not found</p>
-              <Button asChild variant="outline" className="mt-4">
+              <p className="text-xl text-muted-foreground mb-2">Product not found</p>
+              <p className="text-muted-foreground mb-6">
+                We couldn't find the product you're looking for. It may have been removed or the URL is incorrect.
+              </p>
+              <Button asChild variant="outline" className="mt-4 mr-4">
                 <Link to="/shop">Return to Shop</Link>
+              </Button>
+              <Button asChild>
+                <Link to="/">Go to Homepage</Link>
               </Button>
             </div>
           </div>

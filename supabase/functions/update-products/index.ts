@@ -24,6 +24,17 @@ serve(async (req) => {
   try {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
+    // Log the current state before updates
+    const { data: existingProducts, error: fetchError } = await supabase
+      .from('products')
+      .select('name');
+    
+    if (fetchError) {
+      console.error("Error fetching existing products:", fetchError);
+    } else {
+      console.log(`Found ${existingProducts.length} existing products before update`);
+    }
+
     // Combine all product categories
     const products = [
       ...premiumDryFruits,
@@ -33,17 +44,39 @@ serve(async (req) => {
       ...giftBoxes
     ];
 
-    // Insert products into the database
+    console.log(`Preparing to upsert ${products.length} products`);
+    
+    // First, make sure to perform the upsert
     const { data, error } = await supabase
       .from('products')
-      .upsert(products, { onConflict: 'name' });
+      .upsert(products, { 
+        onConflict: 'name',
+        ignoreDuplicates: false
+      });
 
     if (error) {
+      console.error("Error during product upsert:", error);
       throw error;
     }
 
+    // Verify that products were actually inserted by checking the count
+    const { count, error: countError } = await supabase
+      .from('products')
+      .select('*', { count: 'exact', head: true });
+    
+    if (countError) {
+      console.error("Error counting products after upsert:", countError);
+    } else {
+      console.log(`Total products after update: ${count}`);
+    }
+
     return new Response(
-      JSON.stringify({ success: true, message: "Products updated successfully", count: products.length }),
+      JSON.stringify({ 
+        success: true, 
+        message: "Products updated successfully", 
+        count: products.length,
+        totalInDatabase: count || 'unknown'
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );
 

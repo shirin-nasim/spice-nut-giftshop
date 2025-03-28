@@ -63,21 +63,32 @@ export const getProductById = async (productId: string): Promise<Product | null>
     return data as unknown as Product;
   } 
   
-  // If not UUID, try by name - first convert slug to name-like format
-  // Convert slug like "saffron-premium" to a search term
-  const searchTerm = productId.replace(/-/g, ' ');
+  // If not UUID format, try more flexible slug-based search
+  const searchTerm = productId.replace(/-/g, ' ').trim();
   console.log("Searching for product with term:", searchTerm);
   
-  const { data, error } = await supabase
+  // Try exact match first (most likely to work)
+  let { data, error } = await supabase
     .from("products")
     .select("*")
-    .ilike("name", `%${searchTerm}%`)
-    .order("name")
+    .ilike("name", searchTerm)
     .maybeSingle();
 
-  if (error && error.code !== "PGRST116") {
-    console.error("Error fetching product by slug:", error);
-    throw error;
+  if ((!data || error) && error?.code !== "PGRST116") {
+    // Try partial match if exact match fails
+    const { data: partialData, error: partialError } = await supabase
+      .from("products")
+      .select("*")
+      .ilike("name", `%${searchTerm}%`)
+      .order("name")
+      .maybeSingle();
+      
+    if (partialError && partialError.code !== "PGRST116") {
+      console.error("Error fetching product by slug:", partialError);
+      throw partialError;
+    }
+    
+    data = partialData;
   }
 
   return data as unknown as Product;
