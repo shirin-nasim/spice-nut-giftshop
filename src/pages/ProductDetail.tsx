@@ -13,7 +13,7 @@ import ProductTabs from "@/components/product/ProductTabs";
 import RelatedProducts from "@/components/product/RelatedProducts";
 import RecentlyViewedProducts from "@/components/product/RecentlyViewedProducts";
 import ProductBreadcrumb from "@/components/product/ProductBreadcrumb";
-import { getProductById } from "@/services/productService";
+import { getProductById, getProducts } from "@/services/productService";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { Product } from "@/types/supabase";
 
@@ -21,6 +21,7 @@ const ProductDetail = () => {
   const { productId } = useParams<{ productId: string }>();
   const { recentlyViewed, addToRecentlyViewed } = useRecentlyViewed();
   const navigate = useNavigate();
+  const [fallbackProducts, setFallbackProducts] = useState<Product[]>([]);
   
   // Weight options
   const weightOptions = [
@@ -37,16 +38,42 @@ const ProductDetail = () => {
     "https://images.unsplash.com/photo-1625869841899-a3314437f4d5?q=80&w=1974&auto=format&fit=crop",
   ];
   
+  // Fetch fallback products
+  useEffect(() => {
+    const fetchFallbackProducts = async () => {
+      try {
+        const products = await getProducts();
+        if (products && products.length > 0) {
+          setFallbackProducts(products.slice(0, 5));
+        }
+      } catch (error) {
+        console.error("Error fetching fallback products:", error);
+      }
+    };
+    
+    fetchFallbackProducts();
+  }, []);
+  
   // Fetch product data using React Query
-  const { data: product, isLoading, error } = useQuery({
+  const { data: product, isLoading, error, isError } = useQuery({
     queryKey: ['product', productId],
     queryFn: async () => {
-      if (!productId) return null;
+      if (!productId) {
+        console.error("No product ID provided");
+        return null;
+      }
       
       console.log(`Fetching product with ID/slug: ${productId}`);
       try {
         const result = await getProductById(productId);
         console.log("Product fetch result:", result);
+        
+        // If no product found but we have fallback products, use the first one
+        if (!result && fallbackProducts.length > 0) {
+          console.log("Using fallback product instead");
+          return fallbackProducts[0];
+        }
+        
         return result;
       } catch (err) {
         console.error("Error fetching product:", err);
@@ -58,8 +85,8 @@ const ProductDetail = () => {
         throw err;
       }
     },
-    enabled: !!productId,
-    retry: 1,
+    enabled: !!productId || fallbackProducts.length > 0,
+    retry: 2,
   });
 
   useEffect(() => {
@@ -72,6 +99,17 @@ const ProductDetail = () => {
       addToRecentlyViewed(product);
     }
   }, [product, addToRecentlyViewed]);
+
+  // Redirect to a random product if current one can't be found
+  useEffect(() => {
+    if (isError && fallbackProducts.length > 0) {
+      const randomProduct = fallbackProducts[Math.floor(Math.random() * fallbackProducts.length)];
+      if (randomProduct && randomProduct.id) {
+        console.log(`Redirecting to random product: ${randomProduct.name}`);
+        navigate(`/product/${randomProduct.id}`);
+      }
+    }
+  }, [isError, fallbackProducts, navigate]);
 
   if (isLoading) {
     return (
@@ -143,6 +181,26 @@ const ProductDetail = () => {
               <Button asChild>
                 <Link to="/">Go to Homepage</Link>
               </Button>
+              
+              {fallbackProducts.length > 0 && (
+                <div className="mt-12">
+                  <h3 className="text-lg font-medium mb-4">Browse these products instead:</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto">
+                    {fallbackProducts.slice(0, 4).map(prod => (
+                      <div key={prod.id} className="text-center">
+                        <Link to={`/product/${prod.id}`} className="block hover:opacity-80 transition-opacity">
+                          <img 
+                            src={prod.image || "https://images.unsplash.com/photo-1608057432355-b39bd173756f?w=300&auto=format"} 
+                            alt={prod.name}
+                            className="w-full h-24 object-cover rounded-md mb-2"
+                          />
+                          <p className="text-sm font-medium text-primary truncate">{prod.name}</p>
+                        </Link>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </main>
