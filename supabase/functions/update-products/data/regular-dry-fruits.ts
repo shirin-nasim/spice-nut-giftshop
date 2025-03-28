@@ -1,0 +1,188 @@
+
+export const regularDryFruits = [
+  {
+    name: "Premium Cashew Nuts (W320)",
+    price: 16.99,
+    original_price: 19.99,
+    image: "https://images.unsplash.com/photo-1607113256158-56a934936ef1?q=80&w=1974&auto=format&fit=crop",
+    category: "dry fruits",
+    rating: 4.6,
+    in_stock: true,
+    badge: "Best Seller",
+    description: "Premium W320 cashew nuts from Vietnam, lightly roasted to perfection to enhance their naturally buttery flavor. Our cashews are carefully selected for size and quality, offering the perfect balance of crunch and creaminess.",
+    origin: "Vietnam",
+    weight: "400g",
+    shelf_life: "9 months",
+    ingredients: "100% Natural Cashew Nuts",
+    stock_quantity: 175,
+    nutrition: {
+      servingSize: "30g",
+      calories: "160 kcal",
+      protein: "5g",
+      fat: "13g",
+      carbohydrates: "9g",
+      fiber: "1g"
+    }
+  },
+  {
+    name: "Golden Raisins (Premium)",
+    price: 8.99,
+    original_price: 10.99,
+    image: "https://images.unsplash.com/photo-1580910527739-57906fb0ae89?q=80&w=1974&auto=format&fit=crop",
+    category: "dry fruits",
+    rating: 4.3,
+    in_stock: true,
+    description: "Premium golden raisins from Turkey, carefully dried to preserve their natural sweetness, flavor, and nutritional value. These juicy golden raisins are perfect for baking, cooking, or enjoying as a healthy snack throughout the day.",
+    origin: "Turkey",
+    weight: "350g",
+    shelf_life: "12 months",
+    ingredients: "100% Natural Golden Raisins",
+    stock_quantity: 220,
+    nutrition: {
+      servingSize: "30g",
+      calories: "90 kcal",
+      protein: "1g",
+      fat: "0g",
+      carbohydrates: "22g",
+      fiber: "1g"
+    }
+  },
+  {
+    name: "Medjool Dates (Premium)",
+    price: 12.99,
+    original_price: 15.99,
+    image: "https://images.unsplash.com/photo-1609040146481-24ae5b7de636?q=80&w=1974&auto=format&fit=crop",
+    category: "dry fruits",
+    rating: 4.7,
+    in_stock: true,
+    description: "Premium Medjool dates known for their exceptional size, sweetness, and moist texture. Often called the 'king of dates', these naturally sweet treats are harvested at peak ripeness and carefully packaged to preserve their soft, caramel-like texture.",
+    origin: "Saudi Arabia",
+    weight: "400g",
+    shelf_life: "12 months",
+    ingredients: "100% Natural Medjool Dates",
+    stock_quantity: 150,
+    nutrition: {
+      servingSize: "30g",
+      calories: "80 kcal",
+      protein: "0.5g",
+      fat: "0g",
+      carbohydrates: "20g",
+      fiber: "2g"
+    }
+  },
+  {
+    name: "Dried Apricots (Khubani)",
+    price: 9.99,
+    original_price: 12.99,
+    image: "https://images.unsplash.com/photo-1600179114668-539cd86d1a86?q=80&w=2070&auto=format&fit=crop",
+    category: "dry fruits",
+    rating: 4.4,
+    in_stock: true,
+    description: "Premium dried apricots from Afghanistan, naturally sweet and free from added sugars or preservatives. These plump, tender apricots retain their vibrant orange color and are packed with essential nutrients, making them a perfect healthy snack.",
+    origin: "Afghanistan",
+    weight: "350g",
+    shelf_life: "12 months",
+    ingredients: "100% Natural Dried Apricots",
+    stock_quantity: 160,
+    nutrition: {
+      servingSize: "30g",
+      calories: "70 kcal",
+      protein: "1g",
+      fat: "0g",
+      carbohydrates: "16g",
+      fiber: "2g"
+    }
+  },
+  {
+    name: "Dried Cranberries (Sweetened)",
+    price: 7.99,
+    original_price: 9.99,
+    image: "https://images.unsplash.com/photo-1577595927219-caf88d0adfb5?q=80&w=2070&auto=format&fit=crop",
+    category: "dry fruits",
+    rating: 4.3,
+    in_stock: true,
+    description: "Premium dried cranberries from the USA, lightly sweetened to balance their natural tartness. These ruby-red berries are perfect for baking, adding to salads, or enjoying as a snack. Rich in antioxidants and vitamin C.",
+    origin: "USA",
+    weight: "300g",
+    shelf_life: "12 months",
+    ingredients: "Cranberries, Sugar, Sunflower Oil",
+    stock_quantity: 180,
+    nutrition: {
+      servingSize: "30g",
+      calories: "100 kcal",
+      protein: "0g",
+      fat: "0g",
+      carbohydrates: "25g",
+      fiber: "2g"
+    }
+  },
+  {
+    name: "Dried Blueberries (Organic)",
+    price: 11.99,
+    original_price: 14.99,
+    image: "https://images.unsplash.com/photo-1606914907643-74c4b66ae7eb?q=80&w=2070&auto=format&fit=crop",
+    category: "dry fruits",
+    rating: 4.5,
+    in_stock: true,
+    description: "Organic dried blueberries from certified farms in Canada. These tiny powerhouses are packed with antioxidants and offer the perfect balance of sweetness and tanginess. Ideal for adding to cereals, yogurt, or baking into muffins and pancakes.",
+    origin: "Canada",
+    weight: "250g",
+    shelf_life: "12 months",
+    ingredients: "100% Organic Dried Blueberries",
+    stock_quantity: 130,
+    nutrition: {
+      servingSize: "30g",
+      calories: "90 kcal",
+      protein: "0g",
+      fat: "0g",
+      carbohydrates: "22g",
+      fiber: "3g"
+    }
+  },
+  {
+    name: "Dried Prunes (Pitted)",
+    price: 8.99,
+    original_price: 10.99,
+    image: "https://images.unsplash.com/photo-1596359700720-ec74ff74a039?q=80&w=1974&auto=format&fit=crop",
+    category: "dry fruits",
+    rating: 4.2,
+    in_stock: true,
+    description: "Premium pitted prunes from California, naturally sweet and tender. Known for their digestive health benefits, these plump, juicy prunes are carefully dried to preserve their soft texture and rich flavor profile with notes of caramel and vanilla.",
+    origin: "USA",
+    weight: "350g",
+    shelf_life: "12 months",
+    ingredients: "100% Natural Pitted Prunes",
+    stock_quantity: 170,
+    nutrition: {
+      servingSize: "30g",
+      calories: "65 kcal",
+      protein: "1g",
+      fat: "0g",
+      carbohydrates: "16g",
+      fiber: "2g"
+    }
+  },
+  {
+    name: "Dried Mango Slices (Organic)",
+    price: 10.99,
+    original_price: 13.99,
+    image: "https://images.unsplash.com/photo-1605489102258-c1408e7df95a?q=80&w=1932&auto=format&fit=crop",
+    category: "dry fruits",
+    rating: 4.7,
+    in_stock: true,
+    description: "Organic dried mango slices from Thailand, naturally sweet with no added sugars. These chewy, vibrant orange slices offer the perfect tropical sweetness and are packed with vitamins and fiber. A healthy alternative to candy.",
+    origin: "Thailand",
+    weight: "300g",
+    shelf_life: "9 months",
+    ingredients: "100% Organic Dried Mango",
+    stock_quantity: 140,
+    nutrition: {
+      servingSize: "30g",
+      calories: "110 kcal",
+      protein: "1g",
+      fat: "0g",
+      carbohydrates: "26g",
+      fiber: "2g"
+    }
+  }
+];
