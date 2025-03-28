@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import ProductCard from "@/components/ui/ProductCard";
 import { Product } from "@/types/supabase";
 import { getProducts } from "@/services/productService";
+import { toast } from "sonner";
 
 const FeaturedProducts = () => {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
@@ -18,20 +19,38 @@ const FeaturedProducts = () => {
         // Fetch all products and select a mixture of categories for featured display
         const products = await getProducts();
         
+        console.log(`Fetched ${products.length} products for featured section`);
+        
+        if (products.length === 0) {
+          toast.error("No products found. Please check the database connection.");
+          setIsLoading(false);
+          return;
+        }
+        
         // Filter to get a good mix of products (nuts, spices, gift boxes)
         const dryFruits = products.filter(p => p.category === "dry fruits").slice(0, 3);
         const spices = products.filter(p => p.category === "spices").slice(0, 3);
         const premiumSpices = products.filter(p => p.category === "premium spices").slice(0, 1);
         const giftBoxes = products.filter(p => p.category === "gift boxes").slice(0, 1);
         
+        console.log(`Category breakdown: Dry Fruits (${dryFruits.length}), Spices (${spices.length}), Premium Spices (${premiumSpices.length}), Gift Boxes (${giftBoxes.length})`);
+        
         // Combine and shuffle slightly to get a good mix
         const featured = [...dryFruits, ...spices, ...premiumSpices, ...giftBoxes]
           .sort(() => Math.random() - 0.5)
           .slice(0, 8);
           
-        setFeaturedProducts(featured);
+        if (featured.length === 0) {
+          toast.warning("Couldn't find a variety of products. Displaying any available products.");
+          
+          // Just display any products we have if categorization failed
+          setFeaturedProducts(products.slice(0, 8));
+        } else {
+          setFeaturedProducts(featured);
+        }
       } catch (error) {
         console.error("Error fetching featured products:", error);
+        toast.error("Failed to load featured products");
       } finally {
         setIsLoading(false);
       }
@@ -69,6 +88,14 @@ const FeaturedProducts = () => {
                 <div className="bg-gray-200 h-6 w-1/4 rounded"></div>
               </div>
             ))
+          ) : featuredProducts.length === 0 ? (
+            // Show a message when no products are found
+            <div className="col-span-full text-center py-8">
+              <h3 className="text-lg font-medium text-gray-900">No products available</h3>
+              <p className="mt-2 text-gray-500">
+                We're currently updating our inventory. Please check back soon.
+              </p>
+            </div>
           ) : (
             // Show actual products when loaded
             featuredProducts.map((product, index) => (
