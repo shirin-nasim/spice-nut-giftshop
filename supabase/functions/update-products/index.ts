@@ -6,6 +6,8 @@ import { regularDryFruits } from "./data/regular-dry-fruits.ts";
 import { essentialSpices } from "./data/essential-spices.ts";
 import { premiumSpices } from "./data/premium-spices.ts";
 import { giftBoxes } from "./data/gift-boxes.ts";
+import { additionalDryFruits } from "./data/additional-dry-fruits.ts";
+import { additionalSpices } from "./data/additional-spices.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "https://vwavxfqplapjoofwbbrt.supabase.co";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -35,13 +37,15 @@ serve(async (req) => {
       console.log(`Found ${existingProducts.length} existing products before update`);
     }
 
-    // Combine all product categories
+    // Combine all product categories, including the new ones
     const products = [
       ...premiumDryFruits,
       ...regularDryFruits,
       ...essentialSpices,
       ...premiumSpices,
-      ...giftBoxes
+      ...giftBoxes,
+      ...additionalDryFruits,
+      ...additionalSpices
     ];
 
     console.log(`Preparing to upsert ${products.length} products`);
