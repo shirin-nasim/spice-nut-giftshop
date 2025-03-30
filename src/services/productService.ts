@@ -125,11 +125,18 @@ export const getProductById = async (productId: string): Promise<Product | null>
   // First try a direct slug lookup if the slug column exists
   try {
     console.log("Attempting direct slug lookup");
-    const { data: slugData, error: slugError }: ProductQueryResult = await supabase
+    // Explicitly define the result types to prevent deep instantiation
+    let slugData = null;
+    let slugError = null;
+    
+    const result = await supabase
       .from("products")
       .select("*")
       .eq("slug", productId)
       .maybeSingle();
+      
+    slugData = result.data;
+    slugError = result.error;
       
     if (!slugError && slugData) {
       console.log(`Found product by slug: ${slugData.name}`);
@@ -187,7 +194,7 @@ export const getProductById = async (productId: string): Promise<Product | null>
   
   if (words.length > 0) {
     for (const word of words) {
-      const result: ProductQueryResult = await supabase
+      const result = await supabase
         .from("products")
         .select("*")
         .ilike("name", `%${word}%`)
@@ -211,7 +218,7 @@ export const getProductById = async (productId: string): Promise<Product | null>
   for (const product of commonProducts) {
     if (searchTerm.toLowerCase().includes(product)) {
       console.log(`Trying common product match for: ${product}`);
-      const result: ProductQueryResult = await supabase
+      const result = await supabase
         .from("products")
         .select("*")
         .ilike("name", `%${product}%`)
