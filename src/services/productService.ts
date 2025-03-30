@@ -2,6 +2,13 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Product } from "@/types/supabase";
 
+// Define a type for database query results to avoid excessive type instantiation
+type ProductQueryResult = {
+  data: any | null;
+  error: any | null;
+  count?: number | null;
+};
+
 // Helper function to map database fields to Product interface
 const mapDbProductToInterface = (dbProduct: any): Product => {
   return {
@@ -32,7 +39,7 @@ const mapDbProductToInterface = (dbProduct: any): Product => {
 export const getProducts = async (): Promise<Product[]> => {
   console.log("Fetching all products from database...");
   
-  const { data, error } = await supabase
+  const { data, error }: ProductQueryResult = await supabase
     .from("products")
     .select("*")
     .order("name");
@@ -66,7 +73,7 @@ export const getPaginatedProducts = async (
   console.log(`Fetching paginated products: page ${page}, pageSize ${pageSize}`);
   
   // Get products with pagination
-  const { data, error, count } = await supabase
+  const { data, error, count }: ProductQueryResult = await supabase
     .from("products")
     .select("*", { count: "exact" })
     .order("name")
@@ -95,7 +102,7 @@ export const getProductById = async (productId: string): Promise<Product | null>
   if (uuidPattern.test(productId)) {
     console.log("ID appears to be a UUID, searching by exact ID match");
     
-    const { data, error } = await supabase
+    const { data, error }: ProductQueryResult = await supabase
       .from("products")
       .select("*")
       .eq("id", productId)
@@ -118,7 +125,7 @@ export const getProductById = async (productId: string): Promise<Product | null>
   // First try a direct slug lookup if the slug column exists
   try {
     console.log("Attempting direct slug lookup");
-    const { data: slugData, error: slugError } = await supabase
+    const { data: slugData, error: slugError }: ProductQueryResult = await supabase
       .from("products")
       .select("*")
       .eq("slug", productId)
@@ -137,7 +144,7 @@ export const getProductById = async (productId: string): Promise<Product | null>
   console.log(`Converted slug to search term: "${searchTerm}"`);
   
   // Try exact match first on name
-  const { data, error } = await supabase
+  const { data, error }: ProductQueryResult = await supabase
     .from("products")
     .select("*")
     .ilike("name", searchTerm)
@@ -155,7 +162,7 @@ export const getProductById = async (productId: string): Promise<Product | null>
   }
 
   // Try partial match if exact match fails
-  const { data: partialData, error: partialError } = await supabase
+  const { data: partialData, error: partialError }: ProductQueryResult = await supabase
     .from("products")
     .select("*")
     .ilike("name", `%${searchTerm}%`)
@@ -180,8 +187,6 @@ export const getProductById = async (productId: string): Promise<Product | null>
   
   if (words.length > 0) {
     for (const word of words) {
-      // Fix the infinite type instantiation error by specifying a concrete type
-      type ProductQueryResult = { data: any; error: any };
       const result: ProductQueryResult = await supabase
         .from("products")
         .select("*")
@@ -206,7 +211,6 @@ export const getProductById = async (productId: string): Promise<Product | null>
   for (const product of commonProducts) {
     if (searchTerm.toLowerCase().includes(product)) {
       console.log(`Trying common product match for: ${product}`);
-      type ProductQueryResult = { data: any; error: any };
       const result: ProductQueryResult = await supabase
         .from("products")
         .select("*")
@@ -223,7 +227,7 @@ export const getProductById = async (productId: string): Promise<Product | null>
   
   // Try searching all products as a last resort
   console.log("Attempting to find any product as a fallback");
-  const { data: anyProduct } = await supabase
+  const { data: anyProduct }: ProductQueryResult = await supabase
     .from("products")
     .select("*")
     .limit(1)
@@ -242,7 +246,7 @@ export const getProductById = async (productId: string): Promise<Product | null>
 export const getProductsByCategory = async (category: string): Promise<Product[]> => {
   console.log(`Fetching products by category: ${category}`);
   
-  const { data, error } = await supabase
+  const { data, error }: ProductQueryResult = await supabase
     .from("products")
     .select("*")
     .eq("category", category)
@@ -262,7 +266,7 @@ export const getProductsByCategory = async (category: string): Promise<Product[]
 export const searchProducts = async (query: string): Promise<Product[]> => {
   console.log(`Searching products with query: "${query}"`);
   
-  const { data, error } = await supabase
+  const { data, error }: ProductQueryResult = await supabase
     .from("products")
     .select("*")
     .or(`name.ilike.%${query}%, description.ilike.%${query}%, category.ilike.%${query}%`)
@@ -282,7 +286,7 @@ export const searchProducts = async (query: string): Promise<Product[]> => {
 export const getRelatedProducts = async (productId: string, category: string, limit: number = 4): Promise<Product[]> => {
   console.log(`Fetching ${limit} related products for product ${productId} in category ${category}`);
   
-  const { data, error } = await supabase
+  const { data, error }: ProductQueryResult = await supabase
     .from("products")
     .select("*")
     .eq("category", category)
