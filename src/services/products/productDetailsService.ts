@@ -13,7 +13,7 @@ export const getProductById = async (productId: string): Promise<Product | null>
   if (uuidPattern.test(productId)) {
     console.log("ID appears to be a UUID, searching by exact ID match");
     
-    const result: SimpleQueryResult = await supabase
+    const result = await supabase
       .from("products")
       .select("*")
       .eq("id", productId)
@@ -36,7 +36,7 @@ export const getProductById = async (productId: string): Promise<Product | null>
   try {
     console.log("Attempting direct slug lookup");
     
-    const result: SimpleQueryResult = await supabase
+    const result = await supabase
       .from("products")
       .select("*")
       .eq("slug", productId)
@@ -58,7 +58,7 @@ export const getProductById = async (productId: string): Promise<Product | null>
   console.log(`Converted slug to search term: "${searchTerm}"`);
   
   // Try exact match first on name
-  const nameResult: SimpleQueryResult = await supabase
+  const nameResult = await supabase
     .from("products")
     .select("*")
     .ilike("name", searchTerm)
@@ -80,7 +80,7 @@ export const getProductById = async (productId: string): Promise<Product | null>
   }
 
   // Try partial match if exact match fails
-  const partialResult: SimpleQueryResult = await supabase
+  const partialResult = await supabase
     .from("products")
     .select("*")
     .ilike("name", `%${searchTerm}%`)
@@ -109,7 +109,7 @@ export const getProductById = async (productId: string): Promise<Product | null>
   
   if (words.length > 0) {
     for (const word of words) {
-      const wordResult: SimpleQueryResult = await supabase
+      const wordResult = await supabase
         .from("products")
         .select("*")
         .ilike("name", `%${word}%`)
@@ -134,7 +134,7 @@ export const getProductById = async (productId: string): Promise<Product | null>
     if (searchTerm.toLowerCase().includes(product)) {
       console.log(`Trying common product match for: ${product}`);
       
-      const commonResult: SimpleQueryResult = await supabase
+      const commonResult = await supabase
         .from("products")
         .select("*")
         .ilike("name", `%${product}%`)
@@ -151,7 +151,7 @@ export const getProductById = async (productId: string): Promise<Product | null>
   // Try searching all products as a last resort
   console.log("Attempting to find any product as a fallback");
   
-  const anyResult: SimpleQueryResult = await supabase
+  const anyResult = await supabase
     .from("products")
     .select("*")
     .limit(1)
