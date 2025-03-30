@@ -2,17 +2,11 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Product } from "@/types/supabase";
 
-// Define a type for database query results to avoid excessive type instantiation
+// Use a more specific type for database query results
 type ProductQueryResult = {
   data: any | null;
   error: any | null;
   count?: number | null;
-};
-
-// Simple result type for single queries
-type SimpleQueryResult = {
-  data: any;
-  error: any;
 };
 
 // Helper function to map database fields to Product interface
@@ -45,10 +39,13 @@ const mapDbProductToInterface = (dbProduct: any): Product => {
 export const getProducts = async (): Promise<Product[]> => {
   console.log("Fetching all products from database...");
   
-  const { data, error }: ProductQueryResult = await supabase
+  // Use type annotation to break inference chain
+  const result: ProductQueryResult = await supabase
     .from("products")
     .select("*")
     .order("name");
+
+  const { data, error } = result;
 
   if (error) {
     console.error("Error fetching products:", error);
@@ -79,11 +76,14 @@ export const getPaginatedProducts = async (
   console.log(`Fetching paginated products: page ${page}, pageSize ${pageSize}`);
   
   // Get products with pagination
-  const { data, error, count }: ProductQueryResult = await supabase
+  // Use type annotation to break inference chain
+  const result: ProductQueryResult = await supabase
     .from("products")
     .select("*", { count: "exact" })
     .order("name")
     .range(start, start + pageSize - 1);
+
+  const { data, error, count } = result;
 
   if (error) {
     console.error("Error fetching paginated products:", error);
@@ -108,12 +108,17 @@ export const getProductById = async (productId: string): Promise<Product | null>
   if (uuidPattern.test(productId)) {
     console.log("ID appears to be a UUID, searching by exact ID match");
     
-    // Use any to break TypeScript's type inference chain
-    const result: any = await supabase
+    // Break the type inference chain by using a simple interface
+    interface QueryResponse {
+      data: any;
+      error: any;
+    }
+    
+    const result = await supabase
       .from("products")
       .select("*")
       .eq("id", productId)
-      .maybeSingle();
+      .maybeSingle() as unknown as QueryResponse;
 
     if (result.error && result.error.code !== "PGRST116") {
       console.error("Error fetching product by ID:", result.error);
@@ -132,14 +137,18 @@ export const getProductById = async (productId: string): Promise<Product | null>
   try {
     console.log("Attempting direct slug lookup");
     
-    // Use any to completely break the type inference chain
-    const result: any = await supabase
+    // Use a type cast to avoid deep type instantiation
+    interface SlugResponse {
+      data: any;
+      error: any;
+    }
+    
+    const result = await supabase
       .from("products")
       .select("*")
       .eq("slug", productId)
-      .maybeSingle();
+      .maybeSingle() as unknown as SlugResponse;
     
-    // Manual extraction to avoid TypeScript inference issues
     const slugData = result.data;
     const slugError = result.error;
       
@@ -156,11 +165,16 @@ export const getProductById = async (productId: string): Promise<Product | null>
   console.log(`Converted slug to search term: "${searchTerm}"`);
   
   // Try exact match first on name
-  const nameResult: any = await supabase
+  interface NameQueryResponse {
+    data: any;
+    error: any;
+  }
+    
+  const nameResult = await supabase
     .from("products")
     .select("*")
     .ilike("name", searchTerm)
-    .maybeSingle();
+    .maybeSingle() as unknown as NameQueryResponse;
     
   // Manual extraction
   const data = nameResult.data;
@@ -178,12 +192,17 @@ export const getProductById = async (productId: string): Promise<Product | null>
   }
 
   // Try partial match if exact match fails
-  const partialResult: any = await supabase
+  interface PartialQueryResponse {
+    data: any;
+    error: any;
+  }
+    
+  const partialResult = await supabase
     .from("products")
     .select("*")
     .ilike("name", `%${searchTerm}%`)
     .order("name")
-    .maybeSingle();
+    .maybeSingle() as unknown as PartialQueryResponse;
     
   // Manual extraction
   const partialData = partialResult.data;
@@ -207,12 +226,17 @@ export const getProductById = async (productId: string): Promise<Product | null>
   
   if (words.length > 0) {
     for (const word of words) {
-      const wordResult: any = await supabase
+      interface WordQueryResponse {
+        data: any;
+        error: any;
+      }
+      
+      const wordResult = await supabase
         .from("products")
         .select("*")
         .ilike("name", `%${word}%`)
         .limit(1)
-        .maybeSingle();
+        .maybeSingle() as unknown as WordQueryResponse;
       
       if (!wordResult.error && wordResult.data) {
         console.log(`Found product by word match (${word}): ${wordResult.data.name}`);
@@ -231,12 +255,18 @@ export const getProductById = async (productId: string): Promise<Product | null>
   for (const product of commonProducts) {
     if (searchTerm.toLowerCase().includes(product)) {
       console.log(`Trying common product match for: ${product}`);
-      const commonResult: any = await supabase
+      
+      interface CommonQueryResponse {
+        data: any;
+        error: any;
+      }
+      
+      const commonResult = await supabase
         .from("products")
         .select("*")
         .ilike("name", `%${product}%`)
         .limit(1)
-        .maybeSingle();
+        .maybeSingle() as unknown as CommonQueryResponse;
       
       if (commonResult.data) {
         console.log(`Found product by common name match: ${commonResult.data.name}`);
@@ -247,11 +277,17 @@ export const getProductById = async (productId: string): Promise<Product | null>
   
   // Try searching all products as a last resort
   console.log("Attempting to find any product as a fallback");
-  const anyResult: any = await supabase
+  
+  interface FallbackQueryResponse {
+    data: any;
+    error: any;
+  }
+  
+  const anyResult = await supabase
     .from("products")
     .select("*")
     .limit(1)
-    .maybeSingle();
+    .maybeSingle() as unknown as FallbackQueryResponse;
   
   if (anyResult.data) {
     console.log(`Returning fallback product: ${anyResult.data.name}`);
@@ -266,11 +302,18 @@ export const getProductById = async (productId: string): Promise<Product | null>
 export const getProductsByCategory = async (category: string): Promise<Product[]> => {
   console.log(`Fetching products by category: ${category}`);
   
-  const { data, error }: ProductQueryResult = await supabase
+  interface CategoryQueryResponse {
+    data: any;
+    error: any;
+  }
+  
+  const result = await supabase
     .from("products")
     .select("*")
     .eq("category", category)
-    .order("name");
+    .order("name") as unknown as CategoryQueryResponse;
+
+  const { data, error } = result;
 
   if (error) {
     console.error("Error fetching products by category:", error);
@@ -286,11 +329,18 @@ export const getProductsByCategory = async (category: string): Promise<Product[]
 export const searchProducts = async (query: string): Promise<Product[]> => {
   console.log(`Searching products with query: "${query}"`);
   
-  const { data, error }: ProductQueryResult = await supabase
+  interface SearchQueryResponse {
+    data: any;
+    error: any;
+  }
+  
+  const result = await supabase
     .from("products")
     .select("*")
     .or(`name.ilike.%${query}%, description.ilike.%${query}%, category.ilike.%${query}%`)
-    .order("name");
+    .order("name") as unknown as SearchQueryResponse;
+
+  const { data, error } = result;
 
   if (error) {
     console.error("Error searching products:", error);
@@ -306,12 +356,19 @@ export const searchProducts = async (query: string): Promise<Product[]> => {
 export const getRelatedProducts = async (productId: string, category: string, limit: number = 4): Promise<Product[]> => {
   console.log(`Fetching ${limit} related products for product ${productId} in category ${category}`);
   
-  const { data, error }: ProductQueryResult = await supabase
+  interface RelatedQueryResponse {
+    data: any;
+    error: any;
+  }
+  
+  const result = await supabase
     .from("products")
     .select("*")
     .eq("category", category)
     .neq("id", productId) // Exclude the current product
-    .limit(limit);
+    .limit(limit) as unknown as RelatedQueryResponse;
+
+  const { data, error } = result;
 
   if (error) {
     console.error("Error fetching related products:", error);
