@@ -180,17 +180,18 @@ export const getProductById = async (productId: string): Promise<Product | null>
   
   if (words.length > 0) {
     for (const word of words) {
-      // Type safety: explicitly define type for query result
-      const { data: wordData, error: wordError } = await supabase
+      // Fix the infinite type instantiation error by specifying a concrete type
+      type ProductQueryResult = { data: any; error: any };
+      const result: ProductQueryResult = await supabase
         .from("products")
         .select("*")
         .ilike("name", `%${word}%`)
         .limit(1)
         .maybeSingle();
         
-      if (!wordError && wordData) {
-        console.log(`Found product by word match (${word}): ${wordData.name}`);
-        return mapDbProductToInterface(wordData);
+      if (!result.error && result.data) {
+        console.log(`Found product by word match (${word}): ${result.data.name}`);
+        return mapDbProductToInterface(result.data);
       }
     }
   }
@@ -205,16 +206,17 @@ export const getProductById = async (productId: string): Promise<Product | null>
   for (const product of commonProducts) {
     if (searchTerm.toLowerCase().includes(product)) {
       console.log(`Trying common product match for: ${product}`);
-      const { data: commonData } = await supabase
+      type ProductQueryResult = { data: any; error: any };
+      const result: ProductQueryResult = await supabase
         .from("products")
         .select("*")
         .ilike("name", `%${product}%`)
         .limit(1)
         .maybeSingle();
         
-      if (commonData) {
-        console.log(`Found product by common name match: ${commonData.name}`);
-        return mapDbProductToInterface(commonData);
+      if (result.data) {
+        console.log(`Found product by common name match: ${result.data.name}`);
+        return mapDbProductToInterface(result.data);
       }
     }
   }
