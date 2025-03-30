@@ -26,7 +26,7 @@ export const getProducts = async (): Promise<Product[]> => {
     console.log("Sample products:", data.slice(0, 3).map(p => ({ id: p.id, name: p.name, category: p.category })));
   }
   
-  return data as unknown as Product[];
+  return data as Product[];
 };
 
 // Get products with pagination
@@ -54,7 +54,7 @@ export const getPaginatedProducts = async (
   console.log(`Retrieved ${data?.length || 0} products (total: ${count || 0})`);
   
   return { 
-    products: data as unknown as Product[], 
+    products: data as Product[], 
     total: count || 0 
   };
 };
@@ -82,7 +82,7 @@ export const getProductById = async (productId: string): Promise<Product | null>
 
     if (data) {
       console.log(`Found product by ID: ${data.name}`);
-      return data as unknown as Product;
+      return data as Product;
     } else {
       console.log("No product found with that ID");
     }
@@ -100,7 +100,7 @@ export const getProductById = async (productId: string): Promise<Product | null>
       
     if (!slugError && slugData) {
       console.log(`Found product by slug: ${slugData.name}`);
-      return slugData as unknown as Product;
+      return slugData as Product;
     }
   } catch (e) {
     console.log("Slug column might not exist, continuing with name-based search");
@@ -119,7 +119,7 @@ export const getProductById = async (productId: string): Promise<Product | null>
 
   if (data) {
     console.log(`Found product by exact name match: ${data.name}`);
-    return data as unknown as Product;
+    return data as Product;
   }
   
   if (error && error.code !== "PGRST116") {
@@ -143,7 +143,7 @@ export const getProductById = async (productId: string): Promise<Product | null>
   
   if (partialData) {
     console.log(`Found product by partial name match: ${partialData.name}`);
-    return partialData as unknown as Product;
+    return partialData as Product;
   } 
   
   console.log("No products found with that name pattern");
@@ -163,7 +163,7 @@ export const getProductById = async (productId: string): Promise<Product | null>
         
       if (!wordError && wordData) {
         console.log(`Found product by word match (${word}): ${wordData.name}`);
-        return wordData as unknown as Product;
+        return wordData as Product;
       }
     }
   }
@@ -187,7 +187,7 @@ export const getProductById = async (productId: string): Promise<Product | null>
         
       if (commonData) {
         console.log(`Found product by common name match: ${commonData.name}`);
-        return commonData as unknown as Product;
+        return commonData as Product;
       }
     }
   }
@@ -202,7 +202,7 @@ export const getProductById = async (productId: string): Promise<Product | null>
     
   if (anyProduct) {
     console.log(`Returning fallback product: ${anyProduct.name}`);
-    return anyProduct as unknown as Product;
+    return anyProduct as Product;
   }
   
   console.log("All search methods exhausted, no product found");
@@ -226,7 +226,7 @@ export const getProductsByCategory = async (category: string): Promise<Product[]
 
   console.log(`Retrieved ${data?.length || 0} products in category "${category}"`);
   
-  return data as unknown as Product[];
+  return data as Product[];
 };
 
 // Search products
@@ -246,7 +246,7 @@ export const searchProducts = async (query: string): Promise<Product[]> => {
 
   console.log(`Search returned ${data?.length || 0} results`);
   
-  return data as unknown as Product[];
+  return data as Product[];
 };
 
 // Get related products (products in the same category)
@@ -267,5 +267,5 @@ export const getRelatedProducts = async (productId: string, category: string, li
 
   console.log(`Retrieved ${data?.length || 0} related products`);
   
-  return data as unknown as Product[];
+  return data as Product[];
 };
