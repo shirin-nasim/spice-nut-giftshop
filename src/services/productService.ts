@@ -2,6 +2,32 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Product } from "@/types/supabase";
 
+// Helper function to map database fields to Product interface
+const mapDbProductToInterface = (dbProduct: any): Product => {
+  return {
+    id: dbProduct.id,
+    name: dbProduct.name,
+    price: dbProduct.price,
+    originalPrice: dbProduct.original_price,
+    image: dbProduct.image,
+    category: dbProduct.category,
+    badge: dbProduct.badge,
+    rating: dbProduct.rating,
+    isNew: dbProduct.is_new,
+    inStock: dbProduct.in_stock,
+    description: dbProduct.description,
+    origin: dbProduct.origin,
+    weight: dbProduct.weight,
+    shelfLife: dbProduct.shelf_life,
+    ingredients: dbProduct.ingredients,
+    stockQuantity: dbProduct.stock_quantity,
+    details: dbProduct.details,
+    nutrition: dbProduct.nutrition,
+    createdAt: dbProduct.created_at,
+    updatedAt: dbProduct.updated_at,
+  };
+};
+
 // Get all products
 export const getProducts = async (): Promise<Product[]> => {
   console.log("Fetching all products from database...");
@@ -26,7 +52,7 @@ export const getProducts = async (): Promise<Product[]> => {
     console.log("Sample products:", data.slice(0, 3).map(p => ({ id: p.id, name: p.name, category: p.category })));
   }
   
-  return data as Product[];
+  return (data || []).map(mapDbProductToInterface);
 };
 
 // Get products with pagination
@@ -54,7 +80,7 @@ export const getPaginatedProducts = async (
   console.log(`Retrieved ${data?.length || 0} products (total: ${count || 0})`);
   
   return { 
-    products: data as Product[], 
+    products: (data || []).map(mapDbProductToInterface), 
     total: count || 0 
   };
 };
@@ -82,7 +108,7 @@ export const getProductById = async (productId: string): Promise<Product | null>
 
     if (data) {
       console.log(`Found product by ID: ${data.name}`);
-      return data as Product;
+      return mapDbProductToInterface(data);
     } else {
       console.log("No product found with that ID");
     }
@@ -100,7 +126,7 @@ export const getProductById = async (productId: string): Promise<Product | null>
       
     if (!slugError && slugData) {
       console.log(`Found product by slug: ${slugData.name}`);
-      return slugData as Product;
+      return mapDbProductToInterface(slugData);
     }
   } catch (e) {
     console.log("Slug column might not exist, continuing with name-based search");
@@ -119,7 +145,7 @@ export const getProductById = async (productId: string): Promise<Product | null>
 
   if (data) {
     console.log(`Found product by exact name match: ${data.name}`);
-    return data as Product;
+    return mapDbProductToInterface(data);
   }
   
   if (error && error.code !== "PGRST116") {
@@ -143,7 +169,7 @@ export const getProductById = async (productId: string): Promise<Product | null>
   
   if (partialData) {
     console.log(`Found product by partial name match: ${partialData.name}`);
-    return partialData as Product;
+    return mapDbProductToInterface(partialData);
   } 
   
   console.log("No products found with that name pattern");
@@ -163,7 +189,7 @@ export const getProductById = async (productId: string): Promise<Product | null>
         
       if (!wordError && wordData) {
         console.log(`Found product by word match (${word}): ${wordData.name}`);
-        return wordData as Product;
+        return mapDbProductToInterface(wordData);
       }
     }
   }
@@ -187,7 +213,7 @@ export const getProductById = async (productId: string): Promise<Product | null>
         
       if (commonData) {
         console.log(`Found product by common name match: ${commonData.name}`);
-        return commonData as Product;
+        return mapDbProductToInterface(commonData);
       }
     }
   }
@@ -202,7 +228,7 @@ export const getProductById = async (productId: string): Promise<Product | null>
     
   if (anyProduct) {
     console.log(`Returning fallback product: ${anyProduct.name}`);
-    return anyProduct as Product;
+    return mapDbProductToInterface(anyProduct);
   }
   
   console.log("All search methods exhausted, no product found");
@@ -226,7 +252,7 @@ export const getProductsByCategory = async (category: string): Promise<Product[]
 
   console.log(`Retrieved ${data?.length || 0} products in category "${category}"`);
   
-  return data as Product[];
+  return (data || []).map(mapDbProductToInterface);
 };
 
 // Search products
@@ -246,7 +272,7 @@ export const searchProducts = async (query: string): Promise<Product[]> => {
 
   console.log(`Search returned ${data?.length || 0} results`);
   
-  return data as Product[];
+  return (data || []).map(mapDbProductToInterface);
 };
 
 // Get related products (products in the same category)
@@ -267,5 +293,5 @@ export const getRelatedProducts = async (productId: string, category: string, li
 
   console.log(`Retrieved ${data?.length || 0} related products`);
   
-  return data as Product[];
+  return (data || []).map(mapDbProductToInterface);
 };
