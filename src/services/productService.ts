@@ -108,20 +108,21 @@ export const getProductById = async (productId: string): Promise<Product | null>
   if (uuidPattern.test(productId)) {
     console.log("ID appears to be a UUID, searching by exact ID match");
     
-    const { data, error }: ProductQueryResult = await supabase
+    // Use any to break TypeScript's type inference chain
+    const result: any = await supabase
       .from("products")
       .select("*")
       .eq("id", productId)
       .maybeSingle();
 
-    if (error && error.code !== "PGRST116") {
-      console.error("Error fetching product by ID:", error);
-      throw error;
+    if (result.error && result.error.code !== "PGRST116") {
+      console.error("Error fetching product by ID:", result.error);
+      throw result.error;
     }
 
-    if (data) {
-      console.log(`Found product by ID: ${data.name}`);
-      return mapDbProductToInterface(data);
+    if (result.data) {
+      console.log(`Found product by ID: ${result.data.name}`);
+      return mapDbProductToInterface(result.data);
     } else {
       console.log("No product found with that ID");
     }
@@ -131,15 +132,16 @@ export const getProductById = async (productId: string): Promise<Product | null>
   try {
     console.log("Attempting direct slug lookup");
     
-    // Use unknown type to break the inference chain
-    const result: unknown = await supabase
+    // Use any to completely break the type inference chain
+    const result: any = await supabase
       .from("products")
       .select("*")
       .eq("slug", productId)
       .maybeSingle();
     
-    // Type assertion after the query  
-    const { data: slugData, error: slugError } = result as SimpleQueryResult;
+    // Manual extraction to avoid TypeScript inference issues
+    const slugData = result.data;
+    const slugError = result.error;
       
     if (!slugError && slugData) {
       console.log(`Found product by slug: ${slugData.name}`);
@@ -154,14 +156,15 @@ export const getProductById = async (productId: string): Promise<Product | null>
   console.log(`Converted slug to search term: "${searchTerm}"`);
   
   // Try exact match first on name
-  const nameResult: unknown = await supabase
+  const nameResult: any = await supabase
     .from("products")
     .select("*")
     .ilike("name", searchTerm)
     .maybeSingle();
     
-  // Type assertion after the query
-  const { data, error } = nameResult as SimpleQueryResult;
+  // Manual extraction
+  const data = nameResult.data;
+  const error = nameResult.error;
 
   if (data) {
     console.log(`Found product by exact name match: ${data.name}`);
@@ -175,15 +178,16 @@ export const getProductById = async (productId: string): Promise<Product | null>
   }
 
   // Try partial match if exact match fails
-  const partialResult: unknown = await supabase
+  const partialResult: any = await supabase
     .from("products")
     .select("*")
     .ilike("name", `%${searchTerm}%`)
     .order("name")
     .maybeSingle();
     
-  // Type assertion after the query
-  const { data: partialData, error: partialError } = partialResult as SimpleQueryResult;
+  // Manual extraction
+  const partialData = partialResult.data;
+  const partialError = partialResult.error;
     
   if (partialError && partialError.code !== "PGRST116") {
     console.error("Error in partial name search:", partialError);
@@ -203,18 +207,16 @@ export const getProductById = async (productId: string): Promise<Product | null>
   
   if (words.length > 0) {
     for (const word of words) {
-      const wordResult: unknown = await supabase
+      const wordResult: any = await supabase
         .from("products")
         .select("*")
         .ilike("name", `%${word}%`)
         .limit(1)
         .maybeSingle();
-        
-      const result = wordResult as SimpleQueryResult;
-        
-      if (!result.error && result.data) {
-        console.log(`Found product by word match (${word}): ${result.data.name}`);
-        return mapDbProductToInterface(result.data);
+      
+      if (!wordResult.error && wordResult.data) {
+        console.log(`Found product by word match (${word}): ${wordResult.data.name}`);
+        return mapDbProductToInterface(wordResult.data);
       }
     }
   }
@@ -229,35 +231,31 @@ export const getProductById = async (productId: string): Promise<Product | null>
   for (const product of commonProducts) {
     if (searchTerm.toLowerCase().includes(product)) {
       console.log(`Trying common product match for: ${product}`);
-      const commonResult: unknown = await supabase
+      const commonResult: any = await supabase
         .from("products")
         .select("*")
         .ilike("name", `%${product}%`)
         .limit(1)
         .maybeSingle();
-        
-      const result = commonResult as SimpleQueryResult;
-        
-      if (result.data) {
-        console.log(`Found product by common name match: ${result.data.name}`);
-        return mapDbProductToInterface(result.data);
+      
+      if (commonResult.data) {
+        console.log(`Found product by common name match: ${commonResult.data.name}`);
+        return mapDbProductToInterface(commonResult.data);
       }
     }
   }
   
   // Try searching all products as a last resort
   console.log("Attempting to find any product as a fallback");
-  const anyResult: unknown = await supabase
+  const anyResult: any = await supabase
     .from("products")
     .select("*")
     .limit(1)
     .maybeSingle();
-    
-  const anyProduct = (anyResult as SimpleQueryResult).data;
-    
-  if (anyProduct) {
-    console.log(`Returning fallback product: ${anyProduct.name}`);
-    return mapDbProductToInterface(anyProduct);
+  
+  if (anyResult.data) {
+    console.log(`Returning fallback product: ${anyResult.data.name}`);
+    return mapDbProductToInterface(anyResult.data);
   }
   
   console.log("All search methods exhausted, no product found");
