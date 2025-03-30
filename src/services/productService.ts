@@ -180,6 +180,7 @@ export const getProductById = async (productId: string): Promise<Product | null>
   
   if (words.length > 0) {
     for (const word of words) {
+      // Type safety: explicitly define type for query result
       const { data: wordData, error: wordError } = await supabase
         .from("products")
         .select("*")
