@@ -13,11 +13,13 @@ export const getProductById = async (productId: string): Promise<Product | null>
   if (uuidPattern.test(productId)) {
     console.log("ID appears to be a UUID, searching by exact ID match");
     
-    const { data, error } = await supabase
+    const result = await supabase
       .from("products")
       .select("*")
       .eq("id", productId)
       .maybeSingle();
+
+    const { data, error } = result;
 
     if (error && error.code !== "PGRST116") {
       console.error("Error fetching product by ID:", error);
@@ -36,11 +38,13 @@ export const getProductById = async (productId: string): Promise<Product | null>
   try {
     console.log("Attempting direct slug lookup");
     
-    const { data: slugData, error: slugError } = await supabase
+    const result = await supabase
       .from("products")
       .select("*")
       .eq("slug", productId)
       .maybeSingle();
+      
+    const { data: slugData, error: slugError } = result;
       
     if (!slugError && slugData) {
       console.log(`Found product by slug: ${slugData.name}`);
@@ -55,11 +59,13 @@ export const getProductById = async (productId: string): Promise<Product | null>
   console.log(`Converted slug to search term: "${searchTerm}"`);
   
   // Try exact match first on name
-  const { data, error } = await supabase
+  const nameResult = await supabase
     .from("products")
     .select("*")
     .ilike("name", searchTerm)
     .maybeSingle();
+
+  const { data, error } = nameResult;
 
   if (data) {
     console.log(`Found product by exact name match: ${data.name}`);
@@ -73,12 +79,14 @@ export const getProductById = async (productId: string): Promise<Product | null>
   }
 
   // Try partial match if exact match fails
-  const { data: partialData, error: partialError } = await supabase
+  const partialResult = await supabase
     .from("products")
     .select("*")
     .ilike("name", `%${searchTerm}%`)
     .order("name")
     .maybeSingle();
+    
+  const { data: partialData, error: partialError } = partialResult;
     
   if (partialError && partialError.code !== "PGRST116") {
     console.error("Error in partial name search:", partialError);
@@ -98,12 +106,14 @@ export const getProductById = async (productId: string): Promise<Product | null>
   
   if (words.length > 0) {
     for (const word of words) {
-      const { data: wordData, error: wordError } = await supabase
+      const wordResult = await supabase
         .from("products")
         .select("*")
         .ilike("name", `%${word}%`)
         .limit(1)
         .maybeSingle();
+      
+      const { data: wordData, error: wordError } = wordResult;
       
       if (!wordError && wordData) {
         console.log(`Found product by word match (${word}): ${wordData.name}`);
@@ -123,12 +133,14 @@ export const getProductById = async (productId: string): Promise<Product | null>
     if (searchTerm.toLowerCase().includes(product)) {
       console.log(`Trying common product match for: ${product}`);
       
-      const { data: commonData, error: commonError } = await supabase
+      const commonResult = await supabase
         .from("products")
         .select("*")
         .ilike("name", `%${product}%`)
         .limit(1)
         .maybeSingle();
+      
+      const { data: commonData, error: commonError } = commonResult;
       
       if (commonData) {
         console.log(`Found product by common name match: ${commonData.name}`);
@@ -140,11 +152,13 @@ export const getProductById = async (productId: string): Promise<Product | null>
   // Try searching all products as a last resort
   console.log("Attempting to find any product as a fallback");
   
-  const { data: anyData, error: anyError } = await supabase
+  const anyResult = await supabase
     .from("products")
     .select("*")
     .limit(1)
     .maybeSingle();
+  
+  const { data: anyData, error: anyError } = anyResult;
   
   if (anyData) {
     console.log(`Returning fallback product: ${anyData.name}`);
