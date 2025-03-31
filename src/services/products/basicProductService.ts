@@ -1,33 +1,33 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Product } from "@/types/supabase";
-import { mapDbProductToInterface, SimpleQueryResult } from "../utils/dbUtils";
+import { mapDbProductToInterface } from "../utils/dbUtils";
 
 // Get all products
 export const getProducts = async (): Promise<Product[]> => {
   console.log("Fetching all products from database...");
   
-  const { data, error } = await supabase
+  const response = await supabase
     .from("products")
     .select("*")
     .order("name");
 
-  if (error) {
-    console.error("Error fetching products:", error);
-    throw error;
+  if (response.error) {
+    console.error("Error fetching products:", response.error);
+    throw response.error;
   }
 
-  console.log(`Retrieved ${data?.length || 0} products from database`);
+  console.log(`Retrieved ${response.data?.length || 0} products from database`);
   
   // Add this debug logging to help identify issues
-  if (data?.length === 0) {
+  if (response.data?.length === 0) {
     console.log("WARNING: No products found in database. Check if products table is populated.");
-  } else if (data) {
+  } else if (response.data) {
     // Log the first few products to help with debugging
-    console.log("Sample products:", data.slice(0, 3).map(p => ({ id: p.id, name: p.name, category: p.category })));
+    console.log("Sample products:", response.data.slice(0, 3).map(p => ({ id: p.id, name: p.name, category: p.category })));
   }
   
-  return (data || []).map(mapDbProductToInterface);
+  return (response.data || []).map(mapDbProductToInterface);
 };
 
 // Get products with pagination
@@ -41,21 +41,21 @@ export const getPaginatedProducts = async (
   console.log(`Fetching paginated products: page ${page}, pageSize ${pageSize}`);
   
   // Get products with pagination
-  const { data, error, count } = await supabase
+  const response = await supabase
     .from("products")
     .select("*", { count: "exact" })
     .order("name")
     .range(start, start + pageSize - 1);
 
-  if (error) {
-    console.error("Error fetching paginated products:", error);
-    throw error;
+  if (response.error) {
+    console.error("Error fetching paginated products:", response.error);
+    throw response.error;
   }
 
-  console.log(`Retrieved ${data?.length || 0} products (total: ${count || 0})`);
+  console.log(`Retrieved ${response.data?.length || 0} products (total: ${response.count || 0})`);
   
   return { 
-    products: (data || []).map(mapDbProductToInterface), 
-    total: count || 0 
+    products: (response.data || []).map(mapDbProductToInterface), 
+    total: response.count || 0 
   };
 };

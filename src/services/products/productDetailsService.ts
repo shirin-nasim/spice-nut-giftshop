@@ -14,20 +14,17 @@ export const getProductById = async (productId: string): Promise<Product | null>
     console.log("ID appears to be a UUID, searching by exact ID match");
     
     try {
+      // Use explicit typing with the full response object
       const response = await supabase
         .from("products")
         .select("*")
         .eq("id", productId)
-        .maybeSingle();
+        .single();
 
       if (response.error) {
-        if (response.error.code !== "PGRST116") {
-          console.error("Error fetching product by ID:", response.error);
-          throw response.error;
-        }
-      }
-
-      if (response.data) {
+        console.error("Error fetching product by ID:", response.error);
+        // Don't throw here, continue with other search methods
+      } else if (response.data) {
         console.log(`Found product by ID: ${response.data.name}`);
         return mapDbProductToInterface(response.data);
       } else {
@@ -35,7 +32,7 @@ export const getProductById = async (productId: string): Promise<Product | null>
       }
     } catch (error) {
       console.error("Exception when fetching by ID:", error);
-      throw error;
+      // Don't throw here, continue with other search methods
     }
   } 
   
@@ -47,14 +44,15 @@ export const getProductById = async (productId: string): Promise<Product | null>
       .from("products")
       .select("*")
       .eq("slug", productId)
-      .maybeSingle();
+      .single();
       
-    if (!slugResponse.error && slugResponse.data) {
+    if (slugResponse.data) {
       console.log(`Found product by slug: ${slugResponse.data.name}`);
       return mapDbProductToInterface(slugResponse.data);
     }
-  } catch (e) {
-    console.log("Slug column might not exist, continuing with name-based search");
+  } catch (error) {
+    console.log("Slug column might not exist or other error:", error);
+    // Continue with name-based search
   }
   
   // Convert slug to a likely product name (replace hyphens with spaces)
@@ -67,20 +65,14 @@ export const getProductById = async (productId: string): Promise<Product | null>
       .from("products")
       .select("*")
       .ilike("name", searchTerm)
-      .maybeSingle();
+      .single();
 
     if (exactNameResponse.data) {
       console.log(`Found product by exact name match: ${exactNameResponse.data.name}`);
       return mapDbProductToInterface(exactNameResponse.data);
     }
-    
-    if (exactNameResponse.error && exactNameResponse.error.code !== "PGRST116") {
-      console.error("Error in exact name search:", exactNameResponse.error);
-    } else {
-      console.log("No exact name match found, trying partial match");
-    }
   } catch (error) {
-    console.error("Exception when searching by exact name:", error);
+    console.log("No exact name match found, trying partial match");
   }
 
   // Try partial match if exact match fails
@@ -90,19 +82,14 @@ export const getProductById = async (productId: string): Promise<Product | null>
       .select("*")
       .ilike("name", `%${searchTerm}%`)
       .order("name")
-      .maybeSingle();
+      .single();
       
-    if (partialResponse.error && partialResponse.error.code !== "PGRST116") {
-      console.error("Error in partial name search:", partialResponse.error);
-      throw partialResponse.error;
-    }
-    
     if (partialResponse.data) {
       console.log(`Found product by partial name match: ${partialResponse.data.name}`);
       return mapDbProductToInterface(partialResponse.data);
     }
   } catch (error) {
-    console.error("Exception when searching by partial name:", error);
+    console.log("No partial name match found");
   }
   
   console.log("No products found with that name pattern");
@@ -119,14 +106,14 @@ export const getProductById = async (productId: string): Promise<Product | null>
           .select("*")
           .ilike("name", `%${word}%`)
           .limit(1)
-          .maybeSingle();
+          .single();
         
-        if (!wordResponse.error && wordResponse.data) {
+        if (wordResponse.data) {
           console.log(`Found product by word match (${word}): ${wordResponse.data.name}`);
           return mapDbProductToInterface(wordResponse.data);
         }
       } catch (error) {
-        console.error(`Error searching by word '${word}':`, error);
+        console.log(`No match found for word: ${word}`);
       }
     }
   }
@@ -148,14 +135,14 @@ export const getProductById = async (productId: string): Promise<Product | null>
           .select("*")
           .ilike("name", `%${product}%`)
           .limit(1)
-          .maybeSingle();
+          .single();
         
         if (commonResponse.data) {
           console.log(`Found product by common name match: ${commonResponse.data.name}`);
           return mapDbProductToInterface(commonResponse.data);
         }
       } catch (error) {
-        console.error(`Error searching by common product '${product}':`, error);
+        console.log(`No match found for common product: ${product}`);
       }
     }
   }
@@ -168,14 +155,14 @@ export const getProductById = async (productId: string): Promise<Product | null>
       .from("products")
       .select("*")
       .limit(1)
-      .maybeSingle();
+      .single();
     
     if (anyResponse.data) {
       console.log(`Returning fallback product: ${anyResponse.data.name}`);
       return mapDbProductToInterface(anyResponse.data);
     }
   } catch (error) {
-    console.error("Error fetching fallback product:", error);
+    console.log("No products found at all");
   }
   
   console.log("All search methods exhausted, no product found");
