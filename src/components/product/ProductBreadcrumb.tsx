@@ -5,11 +5,13 @@ import { Link } from "react-router-dom";
 interface ProductBreadcrumbProps {
   productName: string;
   category: string;
+  slug?: string;
 }
 
 const ProductBreadcrumb: React.FC<ProductBreadcrumbProps> = ({ 
   productName, 
-  category 
+  category,
+  slug
 }) => {
   return (
     <nav className="mb-6">

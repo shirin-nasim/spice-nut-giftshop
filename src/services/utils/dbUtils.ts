@@ -29,6 +29,7 @@ export const mapDbProductToInterface = (dbProduct: any): Product => {
     stockQuantity: dbProduct.stock_quantity,
     details: dbProduct.details,
     nutrition: dbProduct.nutrition,
+    slug: dbProduct.slug,
     createdAt: dbProduct.created_at,
     updatedAt: dbProduct.updated_at,
   };

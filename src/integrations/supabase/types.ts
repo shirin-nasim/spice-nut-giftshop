@@ -213,6 +213,7 @@ export type Database = {
           price: number
           rating: number
           shelf_life: string | null
+          slug: string | null
           stock_quantity: number | null
           updated_at: string | null
           weight: string | null
@@ -234,6 +235,7 @@ export type Database = {
           price: number
           rating?: number
           shelf_life?: string | null
+          slug?: string | null
           stock_quantity?: number | null
           updated_at?: string | null
           weight?: string | null
@@ -255,6 +257,7 @@ export type Database = {
           price?: number
           rating?: number
           shelf_life?: string | null
+          slug?: string | null
           stock_quantity?: number | null
           updated_at?: string | null
           weight?: string | null

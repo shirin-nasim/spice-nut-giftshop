@@ -27,6 +27,7 @@ export interface Product {
     carbohydrates?: string;
     fiber?: string;
   };
+  slug?: string;
   createdAt?: string;
   updatedAt?: string;
 }
