@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Product } from "@/types/supabase";
-import { mapDbProductToInterface } from "../utils/dbUtils";
+import { mapDbProductToInterface, transformDbResults } from "../utils/dbUtils";
 
 // Search products
 export const searchProducts = async (query: string): Promise<Product[]> => {
@@ -27,10 +27,28 @@ export const searchProducts = async (query: string): Promise<Product[]> => {
 export const getProductsByCategory = async (category: string): Promise<Product[]> => {
   console.log(`Fetching products by category: ${category}`);
   
+  // Handle "dry-fruits" or "dry fruits" as a special case to include both "dry fruits" and related categories 
+  if (category === "dry-fruits" || category === "dry fruits") {
+    const response = await supabase
+      .from("products")
+      .select("*")
+      .or(`category.ilike.%dry%fruit%, category.ilike.%nut%`)
+      .order("name");
+
+    if (response.error) {
+      console.error("Error fetching dry fruits products:", response.error);
+      throw response.error;
+    }
+
+    console.log(`Retrieved ${response.data?.length || 0} dry fruits/nuts products`);
+    return (response.data || []).map(mapDbProductToInterface);
+  } 
+  
+  // For other categories, use the exact match
   const response = await supabase
     .from("products")
     .select("*")
-    .eq("category", category)
+    .ilike("category", `%${category}%`)
     .order("name");
 
   if (response.error) {
@@ -50,7 +68,7 @@ export const getRelatedProducts = async (productId: string, category: string, li
   const response = await supabase
     .from("products")
     .select("*")
-    .eq("category", category)
+    .ilike("category", `%${category}%`) 
     .neq("id", productId) // Exclude the current product
     .limit(limit);
 

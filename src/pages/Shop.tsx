@@ -21,133 +21,14 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-
-// Sample products data - this would come from an API in a real application
-const productsData: Product[] = [
-  {
-    id: "premium-almonds",
-    name: "Premium California Almonds",
-    price: 12.99,
-    originalPrice: 15.99,
-    image: "https://images.unsplash.com/photo-1574184864703-3487b13f0edd?q=80&w=1932&auto=format&fit=crop",
-    category: "dry-fruits",
-    rating: 5,
-    inStock: true,
-  },
-  {
-    id: "cashews-premium",
-    name: "Jumbo Cashews Premium Grade",
-    price: 14.99,
-    image: "https://images.unsplash.com/photo-1607113256158-56a934936ef1?q=80&w=1974&auto=format&fit=crop",
-    category: "dry-fruits",
-    badge: "Best Seller",
-    rating: 4.5,
-    inStock: true,
-  },
-  {
-    id: "saffron-premium",
-    name: "Pure Premium Saffron Threads",
-    price: 19.99,
-    originalPrice: 24.99,
-    image: "https://images.unsplash.com/photo-1625944230945-1b7dd3b949ab?q=80&w=1964&auto=format&fit=crop",
-    category: "spices",
-    badge: "Limited",
-    rating: 5,
-    inStock: true,
-  },
-  {
-    id: "pistachios-roasted",
-    name: "Roasted Pistachios Lightly Salted",
-    price: 11.99,
-    image: "https://images.unsplash.com/photo-1590760475226-60ada5127a6f?q=80&w=1974&auto=format&fit=crop",
-    category: "dry-fruits",
-    rating: 4,
-    isNew: true,
-    inStock: true,
-  },
-  {
-    id: "cardamom-green",
-    name: "Organic Green Cardamom Pods",
-    price: 8.99,
-    originalPrice: 10.99,
-    image: "https://images.unsplash.com/photo-1552189050-8be8fee84507?q=80&w=1974&auto=format&fit=crop",
-    category: "spices",
-    rating: 4.5,
-    inStock: true,
-  },
-  {
-    id: "walnuts-halves",
-    name: "California Walnut Halves & Pieces",
-    price: 13.99,
-    image: "https://images.unsplash.com/photo-1596362601603-b74f6ef166e5?q=80&w=1964&auto=format&fit=crop",
-    category: "dry-fruits",
-    rating: 4,
-    inStock: true,
-  },
-  {
-    id: "cinnamon-sticks",
-    name: "Ceylon Cinnamon Sticks Premium",
-    price: 7.99,
-    originalPrice: 9.99,
-    image: "https://images.unsplash.com/photo-1639981585287-ebb3cdd35e33?q=80&w=1933&auto=format&fit=crop",
-    category: "spices",
-    rating: 4.5,
-    inStock: true,
-  },
-  {
-    id: "gift-box-premium",
-    name: "Luxury Dry Fruit & Spice Gift Box",
-    price: 49.99,
-    image: "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?q=80&w=1980&auto=format&fit=crop",
-    category: "gift-boxes",
-    badge: "Premium",
-    rating: 5,
-    isNew: true,
-    inStock: true,
-  },
-  {
-    id: "dates-medjool",
-    name: "Organic Medjool Dates",
-    price: 15.99,
-    image: "https://images.unsplash.com/photo-1609040146481-24ae5b7de636?q=80&w=1974&auto=format&fit=crop",
-    category: "dry-fruits",
-    rating: 4.5,
-    inStock: true,
-  },
-  {
-    id: "turmeric-powder",
-    name: "Organic Turmeric Powder",
-    price: 6.99,
-    image: "https://images.unsplash.com/photo-1615485290382-441e4d049cb5?q=80&w=2070&auto=format&fit=crop",
-    category: "spices",
-    rating: 4,
-    inStock: true,
-  },
-  {
-    id: "macadamia-nuts",
-    name: "Premium Macadamia Nuts",
-    price: 18.99,
-    originalPrice: 22.99,
-    image: "https://images.unsplash.com/photo-1574053103709-e5141aeac851?q=80&w=1974&auto=format&fit=crop",
-    category: "dry-fruits",
-    rating: 4.5,
-    inStock: true,
-  },
-  {
-    id: "cumin-seeds",
-    name: "Organic Cumin Seeds",
-    price: 5.99,
-    image: "https://images.unsplash.com/photo-1549895058-36748fa6c6a9?q=80&w=1935&auto=format&fit=crop",
-    category: "spices",
-    rating: 4,
-    inStock: true,
-  },
-];
+import { getProducts, getProductsByCategory } from "@/services/productService";
+import { useToast } from "@/hooks/use-toast";
 
 const Shop = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const categoryFromUrl = queryParams.get("category");
+  const { toast } = useToast();
   
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
@@ -155,6 +36,7 @@ const Shop = () => {
   const [sortBy, setSortBy] = useState("featured");
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 100]);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [loading, setLoading] = useState(true);
   
   // Categories based on the products data
   const categories = [
@@ -164,20 +46,38 @@ const Shop = () => {
     { id: "gift-boxes", name: "Gift Boxes" },
   ];
 
-  // Initialize products on component mount
+  // Fetch products from the database based on category
   useEffect(() => {
-    // In a real app, this would be an API call with filters
-    setProducts(productsData);
-  }, []);
+    const fetchProducts = async () => {
+      setLoading(true);
+      try {
+        let fetchedProducts;
+        if (activeCategory === "all") {
+          fetchedProducts = await getProducts();
+        } else {
+          fetchedProducts = await getProductsByCategory(activeCategory);
+        }
+        
+        console.log(`Fetched ${fetchedProducts.length} products for category ${activeCategory}`);
+        setProducts(fetchedProducts);
+      } catch (error) {
+        console.error("Error fetching products:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load products. Please try again later.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // Filter products whenever activeCategory, sortBy, or priceRange changes
+    fetchProducts();
+  }, [activeCategory, toast]);
+
+  // Filter products whenever products, sortBy, or priceRange changes
   useEffect(() => {
     let result = [...products];
-    
-    // Filter by category
-    if (activeCategory !== "all") {
-      result = result.filter(product => product.category === activeCategory);
-    }
     
     // Filter by price range
     result = result.filter(
@@ -205,7 +105,7 @@ const Shop = () => {
     }
     
     setFilteredProducts(result);
-  }, [products, activeCategory, sortBy, priceRange]);
+  }, [products, sortBy, priceRange]);
 
   // Update activeCategory when the URL changes
   useEffect(() => {
@@ -486,7 +386,11 @@ const Shop = () => {
               )}
               
               {/* Products Grid */}
-              {filteredProducts.length > 0 ? (
+              {loading ? (
+                <div className="text-center py-20">
+                  <p className="text-xl text-muted-foreground mb-4">Loading products...</p>
+                </div>
+              ) : filteredProducts.length > 0 ? (
                 <div className={`animate-fade-in ${
                   viewMode === "grid" 
                     ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" 
@@ -502,7 +406,7 @@ const Shop = () => {
                     ) : (
                       <Link
                         key={product.id}
-                        to={`/product/${product.id}`}
+                        to={`/product/${product.slug || product.id}`}
                         className="flex bg-white rounded-xl shadow-premium-sm hover:shadow-premium-md transition-all duration-300 overflow-hidden"
                       >
                         <div className="w-1/3">
