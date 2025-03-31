@@ -1,6 +1,13 @@
 
 import { Product } from "@/types/supabase";
 
+// Define SimpleQueryResult type to handle Supabase query responses
+export interface SimpleQueryResult {
+  data: any[] | null;
+  error: any;
+  count?: number;
+}
+
 // Helper function to map database fields to Product interface
 export const mapDbProductToInterface = (dbProduct: any): Product => {
   return {

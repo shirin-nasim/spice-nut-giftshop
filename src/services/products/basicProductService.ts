@@ -7,13 +7,10 @@ import { mapDbProductToInterface, SimpleQueryResult } from "../utils/dbUtils";
 export const getProducts = async (): Promise<Product[]> => {
   console.log("Fetching all products from database...");
   
-  // Use type annotation to break inference chain
-  const result: SimpleQueryResult = await supabase
+  const { data, error } = await supabase
     .from("products")
     .select("*")
-    .order("name") as unknown as SimpleQueryResult;
-
-  const { data, error } = result;
+    .order("name");
 
   if (error) {
     console.error("Error fetching products:", error);
@@ -44,13 +41,11 @@ export const getPaginatedProducts = async (
   console.log(`Fetching paginated products: page ${page}, pageSize ${pageSize}`);
   
   // Get products with pagination
-  const result: SimpleQueryResult = await supabase
+  const { data, error, count } = await supabase
     .from("products")
     .select("*", { count: "exact" })
     .order("name")
-    .range(start, start + pageSize - 1) as unknown as SimpleQueryResult;
-
-  const { data, error, count } = result;
+    .range(start, start + pageSize - 1);
 
   if (error) {
     console.error("Error fetching paginated products:", error);

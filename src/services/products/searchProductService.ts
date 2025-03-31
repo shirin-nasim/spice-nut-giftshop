@@ -7,13 +7,11 @@ import { mapDbProductToInterface, SimpleQueryResult } from "../utils/dbUtils";
 export const searchProducts = async (query: string): Promise<Product[]> => {
   console.log(`Searching products with query: "${query}"`);
   
-  const result: SimpleQueryResult = await supabase
+  const { data, error } = await supabase
     .from("products")
     .select("*")
     .or(`name.ilike.%${query}%, description.ilike.%${query}%, category.ilike.%${query}%`)
-    .order("name") as unknown as SimpleQueryResult;
-
-  const { data, error } = result;
+    .order("name");
 
   if (error) {
     console.error("Error searching products:", error);
@@ -29,13 +27,11 @@ export const searchProducts = async (query: string): Promise<Product[]> => {
 export const getProductsByCategory = async (category: string): Promise<Product[]> => {
   console.log(`Fetching products by category: ${category}`);
   
-  const result: SimpleQueryResult = await supabase
+  const { data, error } = await supabase
     .from("products")
     .select("*")
     .eq("category", category)
-    .order("name") as unknown as SimpleQueryResult;
-
-  const { data, error } = result;
+    .order("name");
 
   if (error) {
     console.error("Error fetching products by category:", error);
@@ -51,14 +47,12 @@ export const getProductsByCategory = async (category: string): Promise<Product[]
 export const getRelatedProducts = async (productId: string, category: string, limit: number = 4): Promise<Product[]> => {
   console.log(`Fetching ${limit} related products for product ${productId} in category ${category}`);
   
-  const result: SimpleQueryResult = await supabase
+  const { data, error } = await supabase
     .from("products")
     .select("*")
     .eq("category", category)
     .neq("id", productId) // Exclude the current product
-    .limit(limit) as unknown as SimpleQueryResult;
-
-  const { data, error } = result;
+    .limit(limit);
 
   if (error) {
     console.error("Error fetching related products:", error);
