@@ -13,6 +13,14 @@ const ProductBreadcrumb: React.FC<ProductBreadcrumbProps> = ({
   category,
   slug
 }) => {
+  // Format category name for display (replace hyphens with spaces, capitalize)
+  const formatCategory = (cat: string): string => {
+    return cat
+      .split('-')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
   return (
     <nav className="mb-6">
       <ol className="flex text-sm">
@@ -33,7 +41,7 @@ const ProductBreadcrumb: React.FC<ProductBreadcrumbProps> = ({
             to={`/shop?category=${category}`} 
             className="text-muted-foreground hover:text-brand-brown capitalize"
           >
-            {category}
+            {formatCategory(category)}
           </Link>
           <span className="mx-2 text-muted-foreground">/</span>
         </li>

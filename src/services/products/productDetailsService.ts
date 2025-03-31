@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Product } from "@/types/supabase";
-import { mapDbProductToInterface } from "../utils/dbUtils";
+import { mapDbProductToInterface, transformDbResults } from "../utils/dbUtils";
 
 // Get product by ID or slug
 export const getProductById = async (productId: string): Promise<Product | null> => {
@@ -22,7 +22,6 @@ export const getProductById = async (productId: string): Promise<Product | null>
 
       if (response.error) {
         console.error("Error fetching product by ID:", response.error);
-        // Don't throw here, continue with other search methods
       } else if (response.data) {
         console.log(`Found product by ID: ${response.data.name}`);
         return mapDbProductToInterface(response.data);
@@ -31,11 +30,10 @@ export const getProductById = async (productId: string): Promise<Product | null>
       }
     } catch (error) {
       console.error("Exception when fetching by ID:", error);
-      // Don't throw here, continue with other search methods
     }
   } 
   
-  // Try by slug (since we've added the slug column)
+  // Try by slug
   try {
     console.log("Attempting slug lookup");
     
@@ -53,7 +51,6 @@ export const getProductById = async (productId: string): Promise<Product | null>
     }
   } catch (error) {
     console.log("Error in slug lookup:", error);
-    // Continue with name-based search
   }
   
   // Convert slug to a likely product name (replace hyphens with spaces)
@@ -65,30 +62,27 @@ export const getProductById = async (productId: string): Promise<Product | null>
     const exactNameResponse = await supabase
       .from("products")
       .select("*")
-      .ilike("name", searchTerm)
-      .single();
+      .ilike("name", searchTerm);
 
-    if (!exactNameResponse.error && exactNameResponse.data) {
-      console.log(`Found product by exact name match: ${exactNameResponse.data.name}`);
-      return mapDbProductToInterface(exactNameResponse.data);
+    if (!exactNameResponse.error && exactNameResponse.data && exactNameResponse.data.length > 0) {
+      console.log(`Found product by exact name match: ${exactNameResponse.data[0].name}`);
+      return mapDbProductToInterface(exactNameResponse.data[0]);
     }
   } catch (error) {
     console.log("No exact name match found, trying partial match");
   }
 
-  // Try partial match if exact match fails
+  // Try partial match 
   try {
     const partialResponse = await supabase
       .from("products")
       .select("*")
       .ilike("name", `%${searchTerm}%`)
-      .order("name")
-      .limit(1)
-      .single();
+      .order("name");
       
-    if (!partialResponse.error && partialResponse.data) {
-      console.log(`Found product by partial name match: ${partialResponse.data.name}`);
-      return mapDbProductToInterface(partialResponse.data);
+    if (!partialResponse.error && partialResponse.data && partialResponse.data.length > 0) {
+      console.log(`Found product by partial name match: ${partialResponse.data[0].name}`);
+      return mapDbProductToInterface(partialResponse.data[0]);
     }
   } catch (error) {
     console.log("No partial name match found");
@@ -107,12 +101,11 @@ export const getProductById = async (productId: string): Promise<Product | null>
           .from("products")
           .select("*")
           .ilike("name", `%${word}%`)
-          .limit(1)
-          .single();
+          .limit(1);
         
-        if (!wordResponse.error && wordResponse.data) {
-          console.log(`Found product by word match (${word}): ${wordResponse.data.name}`);
-          return mapDbProductToInterface(wordResponse.data);
+        if (!wordResponse.error && wordResponse.data && wordResponse.data.length > 0) {
+          console.log(`Found product by word match (${word}): ${wordResponse.data[0].name}`);
+          return mapDbProductToInterface(wordResponse.data[0]);
         }
       } catch (error) {
         console.log(`No match found for word: ${word}`);
@@ -127,12 +120,11 @@ export const getProductById = async (productId: string): Promise<Product | null>
     const anyResponse = await supabase
       .from("products")
       .select("*")
-      .limit(1)
-      .single();
+      .limit(1);
     
-    if (!anyResponse.error && anyResponse.data) {
-      console.log(`Returning fallback product: ${anyResponse.data.name}`);
-      return mapDbProductToInterface(anyResponse.data);
+    if (!anyResponse.error && anyResponse.data && anyResponse.data.length > 0) {
+      console.log(`Returning fallback product: ${anyResponse.data[0].name}`);
+      return mapDbProductToInterface(anyResponse.data[0]);
     }
   } catch (error) {
     console.log("No products found at all");

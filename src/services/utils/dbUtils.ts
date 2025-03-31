@@ -34,3 +34,17 @@ export const mapDbProductToInterface = (dbProduct: any): Product => {
     updatedAt: dbProduct.updated_at,
   };
 };
+
+// Helper function to safely transform database results into products
+export const transformDbResults = (result: any): Product[] => {
+  if (result?.error) {
+    console.error("Error in database query:", result.error);
+    return [];
+  }
+  
+  if (!result?.data) {
+    return [];
+  }
+  
+  return result.data.map((item: any) => mapDbProductToInterface(item));
+};
