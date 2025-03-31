@@ -26,10 +26,3 @@ export const mapDbProductToInterface = (dbProduct: any): Product => {
     updatedAt: dbProduct.updated_at,
   };
 };
-
-// Type for breaking deep type inference chains in Supabase queries
-export type SimpleQueryResult = {
-  data: any;
-  error: any;
-  count?: number | null;
-};
