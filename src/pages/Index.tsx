@@ -24,11 +24,15 @@ const Index = () => {
       setIsSeedingProducts(true);
       toast.info("Seeding products database...");
       
+      // Get the session first, then use its access token if available
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token || '';
+      
       const response = await fetch('https://vwavxfqplapjoofwbbrt.supabase.co/functions/v1/seed-products', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${supabase.auth.session()?.access_token || ''}`
+          'Authorization': `Bearer ${accessToken}`
         }
       });
       
