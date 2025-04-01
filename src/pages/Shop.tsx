@@ -27,7 +27,9 @@ const Shop = () => {
   const [searchTerm, setSearchTerm] = useState<string>(searchParams.get('search') || '');
   const [categoryFilter, setCategoryFilter] = useState<string[]>(searchParams.getAll('category') || []);
   const [priceRange, setPriceRange] = useState<number[]>([0, 100]);
-  const [sortOption, setSortOption] = useState<SortOption | undefined>(searchParams.get('sort') || undefined);
+  const [sortOption, setSortOption] = useState<SortOption | undefined>(
+    (searchParams.get('sort') as SortOption) || undefined
+  );
 
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
@@ -38,7 +40,7 @@ const Shop = () => {
       setError(null);
       
       const result = await getPaginatedProducts(currentPage, PRODUCTS_PER_PAGE);
-      setPaginatedData(result.products); // Fix: Use result.products instead of the whole result
+      setPaginatedData(result.products);
       setTotalProducts(result.total);
       setFilteredData([]);
       
@@ -58,7 +60,7 @@ const Shop = () => {
 
       const params: ProductFilterParams = {
         search: debouncedSearchTerm,
-        categories: categoryFilter.length > 0 ? categoryFilter : undefined,
+        category: categoryFilter.length > 0 ? categoryFilter : undefined,
         priceMin: priceRange[0] === 0 ? undefined : priceRange[0],
         priceMax: priceRange[1] === 100 ? undefined : priceRange[1],
         sort: sortOption,
@@ -200,13 +202,14 @@ const Shop = () => {
 
         {/* Sorting */}
         <div className="md:col-span-1">
-          <Select onValueChange={setSortOption}>
+          <Select 
+            onValueChange={(value) => setSortOption(value as SortOption)}>
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Relevance" />
             </SelectTrigger>
             <SelectContent>
               {sortingOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value || ''}>
+                <SelectItem key={option.value || 'default'} value={option.value || ''}>
                   {option.label}
                 </SelectItem>
               ))}
