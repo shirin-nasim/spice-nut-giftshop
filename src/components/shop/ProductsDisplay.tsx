@@ -38,7 +38,12 @@ const ProductsDisplay: React.FC<ProductsDisplayProps> = ({
   if (loading) {
     return (
       <div className="text-center py-20">
-        <p className="text-xl text-muted-foreground mb-4">Loading products...</p>
+        <div className="flex justify-center items-center gap-2">
+          <div className="w-4 h-4 rounded-full bg-brand-brown animate-bounce" style={{ animationDelay: "0ms" }}></div>
+          <div className="w-4 h-4 rounded-full bg-brand-brown animate-bounce" style={{ animationDelay: "150ms" }}></div>
+          <div className="w-4 h-4 rounded-full bg-brand-brown animate-bounce" style={{ animationDelay: "300ms" }}></div>
+        </div>
+        <p className="text-xl text-muted-foreground mt-4">Loading products...</p>
       </div>
     );
   }
@@ -46,11 +51,12 @@ const ProductsDisplay: React.FC<ProductsDisplayProps> = ({
   if (filteredProducts.length === 0) {
     return (
       <div className="text-center py-20 animate-fade-in">
+        <div className="text-6xl mb-4">🔍</div>
         <p className="text-xl text-muted-foreground mb-4">No products found</p>
         <p className="text-muted-foreground">Try adjusting your filters or browse all products</p>
         <Button 
           variant="outline" 
-          className="mt-4"
+          className="mt-4 hover:bg-brand-beige hover:text-brand-brown transition-colors duration-300"
           onClick={resetFilters}
         >
           Clear All Filters
@@ -58,6 +64,11 @@ const ProductsDisplay: React.FC<ProductsDisplayProps> = ({
       </div>
     );
   }
+
+  // Calculate start and end indices for the current page
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, filteredProducts.length);
+  const currentProducts = filteredProducts.slice(startIndex, endIndex);
 
   // Generate array of page numbers to display
   const generatePaginationItems = () => {
@@ -101,23 +112,41 @@ const ProductsDisplay: React.FC<ProductsDisplayProps> = ({
 
   return (
     <div className="flex flex-col gap-8">
-      <div className={`animate-fade-in ${
-        viewMode === "grid" 
-          ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" 
-          : "space-y-4"
-      }`}>
-        {filteredProducts.map((product, index) => (
+      <motion.div 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className={`${
+          viewMode === "grid" 
+            ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" 
+            : "space-y-4"
+        }`}
+      >
+        {currentProducts.map((product, index) => (
           viewMode === "grid" ? (
-            <ProductCard 
-              key={product.id} 
-              product={product} 
-              index={index}
-            />
+            <motion.div
+              key={product.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: index * 0.1 }}
+            >
+              <ProductCard 
+                product={product} 
+                index={index}
+              />
+            </motion.div>
           ) : (
-            <ProductListItem key={product.id} product={product} />
+            <motion.div
+              key={product.id}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.4, delay: index * 0.1 }}
+            >
+              <ProductListItem product={product} />
+            </motion.div>
           )
         ))}
-      </div>
+      </motion.div>
       
       {totalPages > 1 && (
         <Pagination className="mt-6">
@@ -127,6 +156,7 @@ const ProductsDisplay: React.FC<ProductsDisplayProps> = ({
                 <PaginationPrevious 
                   onClick={() => onPageChange(currentPage - 1)}
                   href="#"
+                  className="hover:bg-brand-beige hover:text-brand-brown transition-colors duration-300"
                 />
               </PaginationItem>
             )}
@@ -145,6 +175,7 @@ const ProductsDisplay: React.FC<ProductsDisplayProps> = ({
                     }}
                     href="#"
                     isActive={currentPage === page}
+                    className={currentPage === page ? "bg-brand-brown hover:bg-brand-brown-dark" : "hover:bg-brand-beige hover:text-brand-brown"}
                   >
                     {page}
                   </PaginationLink>
@@ -157,6 +188,7 @@ const ProductsDisplay: React.FC<ProductsDisplayProps> = ({
                 <PaginationNext 
                   onClick={() => onPageChange(currentPage + 1)}
                   href="#"
+                  className="hover:bg-brand-beige hover:text-brand-brown transition-colors duration-300"
                 />
               </PaginationItem>
             )}
