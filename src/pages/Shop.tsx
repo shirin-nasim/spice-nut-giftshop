@@ -1,232 +1,279 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { Product } from '@/types/supabase';
+import { getPaginatedProducts, ProductFilterParams, SortOption } from '@/services/productService';
+import ProductCard from '@/components/ui/ProductCard';
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useDebounce } from '@/hooks/useDebounce';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { cn } from "@/lib/utils";
 
-import React, { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
-import { useToast } from "@/hooks/use-toast";
-import { getProductsByCategory, getPaginatedProducts } from "@/services/productService";
-import { Product } from "@/types/supabase";
-
-// Import refactored components
-import ShopHero from "@/components/shop/ShopHero";
-import FilterSidebar from "@/components/shop/FilterSidebar";
-import ShopToolbar from "@/components/shop/ShopToolbar";
-import ActiveFilters from "@/components/shop/ActiveFilters";
-import ProductsDisplay from "@/components/shop/ProductsDisplay";
-
-const ITEMS_PER_PAGE = 12;
+const PRODUCTS_PER_PAGE = 12;
 
 const Shop = () => {
-  const location = useLocation();
-  const queryParams = new URLSearchParams(location.search);
-  const categoryFromUrl = queryParams.get("category");
-  const pageFromUrl = Number(queryParams.get("page") || "1");
-  const { toast } = useToast();
-  
-  const [products, setProducts] = useState<Product[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
-  const [activeCategory, setActiveCategory] = useState<string>(categoryFromUrl || "all");
-  const [sortBy, setSortBy] = useState("featured");
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 100]);
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(pageFromUrl);
+  const [paginatedData, setPaginatedData] = useState<Product[]>([]);
+  const [filteredData, setFilteredData] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [totalProducts, setTotalProducts] = useState(0);
-  const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
-  
-  // Categories based on the products data
-  const categories = [
-    { id: "all", name: "All Products" },
-    { id: "dry-fruits", name: "Dry Fruits" },
-    { id: "spices", name: "Spices" },
-    { id: "gift-boxes", name: "Gift Boxes" },
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+
+  // Filter and Sort States
+  const [searchTerm, setSearchTerm] = useState<string>(searchParams.get('search') || '');
+  const [categoryFilter, setCategoryFilter] = useState<string[]>(searchParams.getAll('category') || []);
+  const [priceRange, setPriceRange] = useState<number[]>([0, 100]);
+  const [sortOption, setSortOption] = useState<SortOption | undefined>(searchParams.get('sort') || undefined);
+
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
+  // Fetching products based on pagination
+  const fetchAllProducts = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const result = await getPaginatedProducts(currentPage, PRODUCTS_PER_PAGE);
+      setPaginatedData(result.products); // Fix: Use result.products instead of the whole result
+      setTotalProducts(result.total);
+      setFilteredData([]);
+      
+    } catch (err) {
+      console.error("Error fetching products:", err);
+      setError("Failed to load products. Please try again later.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [currentPage]);
+
+  // Fetching products based on filters
+  const fetchFilteredProducts = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const params: ProductFilterParams = {
+        search: debouncedSearchTerm,
+        categories: categoryFilter.length > 0 ? categoryFilter : undefined,
+        priceMin: priceRange[0] === 0 ? undefined : priceRange[0],
+        priceMax: priceRange[1] === 100 ? undefined : priceRange[1],
+        sort: sortOption,
+        page: currentPage,
+        pageSize: PRODUCTS_PER_PAGE,
+      };
+
+      // const result = await getFilteredProducts(params);
+      // setFilteredData(result.products);
+      // setTotalProducts(result.total);
+      // setPaginatedData([]);
+    } catch (err) {
+      console.error("Error fetching filtered products:", err);
+      setError("Failed to load products. Please try again later.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [debouncedSearchTerm, categoryFilter, priceRange, sortOption, currentPage]);
+
+  useEffect(() => {
+    // Determine whether to fetch all products or filtered products
+    if (debouncedSearchTerm || categoryFilter.length > 0 || priceRange[0] !== 0 || priceRange[1] !== 100 || sortOption) {
+      // fetchFilteredProducts();
+      console.log("Filters applied, implement fetchFilteredProducts");
+      setFilteredData([]);
+      setTotalProducts(0);
+      setPaginatedData([]);
+    } else {
+      fetchAllProducts();
+    }
+  }, [fetchAllProducts, debouncedSearchTerm, categoryFilter, priceRange, sortOption]);
+
+  // Update URL parameters
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (searchTerm) params.set('search', searchTerm);
+    if (categoryFilter.length > 0) {
+      categoryFilter.forEach(category => params.append('category', category));
+    }
+    if (priceRange[0] !== 0) params.set('priceMin', priceRange[0].toString());
+    if (priceRange[1] !== 100) params.set('priceMax', priceRange[1].toString());
+    if (sortOption) params.set('sort', sortOption);
+
+    setSearchParams(params);
+    setCurrentPage(1); // Reset to first page when filters change
+  }, [searchTerm, categoryFilter, priceRange, sortOption, setSearchParams]);
+
+  // Category filter options
+  const categories = ["Dry Fruits", "Spices", "Gift Boxes", "Premium Spices"];
+
+  // Sorting options
+  const sortingOptions = [
+    { label: "Relevance", value: undefined },
+    { label: "Price: Low to High", value: "price-asc" },
+    { label: "Price: High to Low", value: "price-desc" },
+    { label: "Newest Arrivals", value: "date-desc" },
   ];
 
-  // Fetch products from the database based on category
-  useEffect(() => {
-    const fetchProducts = async () => {
-      setLoading(true);
-      try {
-        let result;
-        
-        if (activeCategory === "all") {
-          result = await getPaginatedProducts(currentPage, ITEMS_PER_PAGE);
-          setProducts(result.products);
-          setTotalProducts(result.total);
-        } else {
-          // For category-specific products, we'll fetch all and handle pagination client-side for now
-          const fetchedProducts = await getProductsByCategory(activeCategory);
-          setProducts(fetchedProducts);
-          setTotalProducts(fetchedProducts.length);
-        }
-        
-        console.log(`Fetched products for category ${activeCategory}, page ${currentPage}, total: ${totalProducts}`);
-      } catch (error) {
-        console.error("Error fetching products:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load products. Please try again later.",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Handlers
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    window.scrollTo(0, 0); // Scroll to top when page changes
+  };
 
-    fetchProducts();
-  }, [activeCategory, currentPage, toast]);
-
-  // Filter and paginate products whenever products, sortBy, or priceRange changes
-  useEffect(() => {
-    let result = [...products];
-    
-    // Filter by price range
-    result = result.filter(
-      product => product.price >= priceRange[0] && product.price <= priceRange[1]
+  const handleCategoryChange = (category: string) => {
+    setCategoryFilter(prev =>
+      prev.includes(category)
+        ? prev.filter(c => c !== category)
+        : [...prev, category]
     );
-    
-    // Sort products
-    switch (sortBy) {
-      case "price-low-high":
-        result.sort((a, b) => a.price - b.price);
-        break;
-      case "price-high-low":
-        result.sort((a, b) => b.price - a.price);
-        break;
-      case "newest":
-        // In a real app, you'd sort by date added
-        result.sort((a, b) => (a.isNew ? -1 : 1) - (b.isNew ? -1 : 1));
-        break;
-      case "rating":
-        result.sort((a, b) => b.rating - a.rating);
-        break;
-      default:
-        // Featured - no specific sorting
-        break;
-    }
-    
-    setFilteredProducts(result);
-    
-    // Only when we're filtering by category client-side (not using server pagination)
-    if (activeCategory !== "all") {
-      // Calculate total pages
-      const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-      const paginatedProducts = result.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-      setDisplayedProducts(paginatedProducts);
-    } else {
-      setDisplayedProducts(result);
-    }
-    
-  }, [products, sortBy, priceRange, currentPage]);
+  };
 
-  // Update URL when page or category changes
-  useEffect(() => {
-    const newParams = new URLSearchParams(location.search);
-    
-    if (activeCategory !== "all") {
-      newParams.set("category", activeCategory);
-    } else {
-      newParams.delete("category");
-    }
-    
-    if (currentPage > 1) {
-      newParams.set("page", currentPage.toString());
-    } else {
-      newParams.delete("page");
-    }
-    
-    const newSearch = newParams.toString();
-    const newUrl = `${location.pathname}${newSearch ? `?${newSearch}` : ''}`;
-    
-    // Only update if the URL actually changes to avoid unnecessary history entries
-    if (location.search !== `?${newSearch}` && location.search !== '' && newSearch !== '') {
-      window.history.replaceState(null, '', newUrl);
-    }
-  }, [activeCategory, currentPage, location.pathname, location.search]);
-
-  // Update activeCategory and page when the URL changes
-  useEffect(() => {
-    const category = queryParams.get("category") || "all";
-    const page = Number(queryParams.get("page") || "1");
-    
-    setActiveCategory(category);
-    setCurrentPage(page);
-  }, [location.search]);
-
-  const totalPages = Math.ceil(totalProducts / ITEMS_PER_PAGE);
-
-  // Reset filters helper function
-  const resetFilters = () => {
-    setActiveCategory("all");
+  const clearFilters = () => {
+    setSearchTerm('');
+    setCategoryFilter([]);
     setPriceRange([0, 100]);
-    setCurrentPage(1);
+    setSortOption(undefined);
+    navigate('/shop'); // Clear URL parameters
   };
 
-  // Handle page change
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  const productsToDisplay = filteredData.length > 0 ? filteredData : paginatedData;
+  const hasProducts = productsToDisplay.length > 0;
+  const totalPages = Math.ceil(totalProducts / PRODUCTS_PER_PAGE);
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <Header />
-      <main className="flex-grow pt-24 pb-10">
-        {/* Shop Hero */}
-        <ShopHero activeCategory={activeCategory} categories={categories} />
+    <div className="container mx-auto py-12">
+      <h1 className="text-3xl font-bold mb-6">Shop</h1>
 
-        <div className="premium-container py-10">
-          <div className="flex flex-col lg:flex-row gap-8">
-            {/* Sidebar - Desktop Filter */}
-            <aside className="w-full lg:w-64 hidden lg:block">
-              <FilterSidebar 
-                categories={categories} 
-                activeCategory={activeCategory} 
-                priceRange={priceRange} 
-                setPriceRange={setPriceRange} 
-              />
-            </aside>
+      {/* Filters and Sorting */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        {/* Search Filter */}
+        <div className="md:col-span-1">
+          <Input
+            type="search"
+            placeholder="Search products..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
 
-            {/* Main Content */}
-            <div className="flex-1">
-              {/* Toolbar */}
-              <ShopToolbar 
-                productsCount={totalProducts}
-                sortBy={sortBy}
-                setSortBy={setSortBy}
-                viewMode={viewMode}
-                setViewMode={setViewMode}
-                categories={categories}
-                activeCategory={activeCategory}
-                priceRange={priceRange}
-                setPriceRange={setPriceRange}
+        {/* Category Filters */}
+        <div className="md:col-span-1">
+          <h3 className="font-semibold mb-2">Category</h3>
+          {categories.map((category) => (
+            <div key={category} className="flex items-center space-x-2">
+              <Checkbox
+                id={`category-${category}`}
+                checked={categoryFilter.includes(category)}
+                onCheckedChange={() => handleCategoryChange(category)}
               />
-              
-              {/* Active Filters */}
-              <ActiveFilters 
-                activeCategory={activeCategory}
-                priceRange={priceRange}
-                categories={categories}
-                setActiveCategory={setActiveCategory}
-                setPriceRange={setPriceRange}
-              />
-              
-              {/* Products Display */}
-              <ProductsDisplay 
-                loading={loading}
-                filteredProducts={displayedProducts}
-                viewMode={viewMode}
-                resetFilters={resetFilters}
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={handlePageChange}
-                itemsPerPage={ITEMS_PER_PAGE}
-              />
+              <label
+                htmlFor={`category-${category}`}
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                {category}
+              </label>
             </div>
+          ))}
+        </div>
+
+        {/* Price Range Filter */}
+        <div className="md:col-span-1">
+          <h3 className="font-semibold mb-2">Price Range</h3>
+          <div className="flex items-center justify-between">
+            <span>$0</span>
+            <span>$100+</span>
+          </div>
+          <Slider
+            defaultValue={priceRange}
+            max={100}
+            step={10}
+            onValueChange={(value) => setPriceRange(value)}
+          />
+          <div className="flex items-center justify-between mt-2">
+            <span>Min: ${priceRange[0]}</span>
+            <span>Max: ${priceRange[1] === 100 ? '100+' : priceRange[1]}</span>
           </div>
         </div>
-      </main>
-      <Footer />
+
+        {/* Sorting */}
+        <div className="md:col-span-1">
+          <Select onValueChange={setSortOption}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Relevance" />
+            </SelectTrigger>
+            <SelectContent>
+              {sortingOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value || ''}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Clear Filters Button */}
+      <Button variant="outline" onClick={clearFilters} className="mb-6">
+        Clear Filters
+      </Button>
+
+      {/* Product Grid */}
+      {isLoading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {Array(12).fill(0).map((_, index) => (
+            <div key={index} className="bg-gray-100 rounded-lg p-4 h-[350px] animate-pulse">
+              <div className="bg-gray-200 h-[200px] mb-4 rounded-md"></div>
+              <div className="bg-gray-200 h-6 w-3/4 mb-2 rounded"></div>
+              <div className="bg-gray-200 h-4 w-1/2 mb-2 rounded"></div>
+              <div className="bg-gray-200 h-6 w-1/4 rounded"></div>
+            </div>
+          ))}
+        </div>
+      ) : error ? (
+        <div className="text-center py-8">
+          <h3 className="text-lg font-medium text-gray-900">Error loading products</h3>
+          <p className="mt-2 text-gray-500">{error}</p>
+        </div>
+      ) : !hasProducts ? (
+        <div className="text-center py-8">
+          <h3 className="text-lg font-medium text-gray-900">No products found</h3>
+          <p className="mt-2 text-gray-500">
+            {debouncedSearchTerm ? 'Try adjusting your search or filters.' : 'We are currently updating our inventory. Please check back soon.'}
+          </p>
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {productsToDisplay.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex justify-center mt-8">
+              <Button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                variant="outline"
+                className="mr-2"
+              >
+                Previous
+              </Button>
+              <Button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                variant="outline"
+              >
+                Next
+              </Button>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 };

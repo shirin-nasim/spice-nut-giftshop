@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Product } from "@/types/supabase";
 import { mapDbProductToInterface, transformDbResults } from "../utils/dbUtils";
@@ -132,4 +131,51 @@ export const getProductById = async (productId: string): Promise<Product | null>
   
   console.log("All search methods exhausted, no product found");
   return null;
+};
+
+/**
+ * Get related products based on category
+ * @param productId - The current product ID to exclude from results
+ * @param category - The category to find related products from
+ * @param limit - Maximum number of related products to return
+ * @returns Array of related products
+ */
+export const getRelatedProducts = async (
+  productId: string, 
+  category?: string, 
+  limit: number = 4
+): Promise<Product[]> => {
+  console.log(`Fetching related products for product ${productId} in category ${category}`);
+  
+  if (!category) {
+    console.log("No category provided, fetching random products");
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .neq("id", productId)
+      .limit(limit);
+      
+    if (error) {
+      console.error("Error fetching related products:", error);
+      throw error;
+    }
+    
+    return (data || []).map(mapDbProductToInterface);
+  }
+  
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("category", category)
+    .neq("id", productId)
+    .limit(limit);
+    
+  if (error) {
+    console.error("Error fetching related products:", error);
+    throw error;
+  }
+  
+  console.log(`Found ${data?.length || 0} related products`);
+  
+  return (data || []).map(mapDbProductToInterface);
 };
