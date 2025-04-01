@@ -1,13 +1,15 @@
 
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Search, ShoppingCart, User, Sun } from "lucide-react";
+import { Menu, X, Search, ShoppingCart, User, Sun, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
+  const { user } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -105,6 +107,17 @@ const Header = () => {
                 <User className="h-5 w-5" />
               </Button>
             </Link>
+            {user && (
+              <Link to="/admin">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="text-muted-foreground hover:text-foreground hover:bg-brand-beige transition-all duration-300"
+                >
+                  <Settings className="h-5 w-5" />
+                </Button>
+              </Link>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -160,6 +173,13 @@ const Header = () => {
                     <User className="h-5 w-5" />
                   </Button>
                 </Link>
+                {user && (
+                  <Link to="/admin">
+                    <Button variant="ghost" size="icon" className="text-muted-foreground">
+                      <Settings className="h-5 w-5" />
+                    </Button>
+                  </Link>
+                )}
               </div>
             </div>
           </nav>
