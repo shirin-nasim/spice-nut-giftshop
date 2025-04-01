@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Product } from "@/types/supabase";
 
@@ -46,8 +45,14 @@ export const searchProducts = async (
     
     // Apply filters
     if (filters.category) {
-      // Handle category filter - make it case insensitive
-      query = query.ilike("category", `%${filters.category.toLowerCase()}%`);
+      // Handle category filter based on whether it's a string or array
+      if (Array.isArray(filters.category)) {
+        if (filters.category.length > 0) {
+          query = query.in('category', filters.category.map(cat => cat.toLowerCase()));
+        }
+      } else {
+        query = query.ilike("category", `%${filters.category.toLowerCase()}%`);
+      }
     }
     
     if (filters.minPrice !== undefined) {

@@ -23,17 +23,15 @@ const Shop = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  // Filter and Sort States
   const [searchTerm, setSearchTerm] = useState<string>(searchParams.get('search') || '');
   const [categoryFilter, setCategoryFilter] = useState<string[]>(searchParams.getAll('category') || []);
   const [priceRange, setPriceRange] = useState<number[]>([0, 100]);
-  const [sortOption, setSortOption] = useState<SortOption | undefined>(
-    (searchParams.get('sort') as SortOption) || undefined
+  const [sortOption, setSortOption] = useState<SortOption | "relevance">(
+    (searchParams.get('sort') as SortOption) || "relevance"
   );
 
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
-  // Fetching products based on pagination
   const fetchAllProducts = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -52,7 +50,6 @@ const Shop = () => {
     }
   }, [currentPage]);
 
-  // Fetching products based on filters
   const fetchFilteredProducts = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -63,7 +60,7 @@ const Shop = () => {
         category: categoryFilter.length > 0 ? categoryFilter : undefined,
         priceMin: priceRange[0] === 0 ? undefined : priceRange[0],
         priceMax: priceRange[1] === 100 ? undefined : priceRange[1],
-        sort: sortOption,
+        sort: sortOption !== "relevance" ? sortOption as SortOption : undefined,
         page: currentPage,
         pageSize: PRODUCTS_PER_PAGE,
       };
@@ -81,9 +78,7 @@ const Shop = () => {
   }, [debouncedSearchTerm, categoryFilter, priceRange, sortOption, currentPage]);
 
   useEffect(() => {
-    // Determine whether to fetch all products or filtered products
-    if (debouncedSearchTerm || categoryFilter.length > 0 || priceRange[0] !== 0 || priceRange[1] !== 100 || sortOption) {
-      // fetchFilteredProducts();
+    if (debouncedSearchTerm || categoryFilter.length > 0 || priceRange[0] !== 0 || priceRange[1] !== 100 || (sortOption && sortOption !== "relevance")) {
       console.log("Filters applied, implement fetchFilteredProducts");
       setFilteredData([]);
       setTotalProducts(0);
@@ -93,7 +88,6 @@ const Shop = () => {
     }
   }, [fetchAllProducts, debouncedSearchTerm, categoryFilter, priceRange, sortOption]);
 
-  // Update URL parameters
   useEffect(() => {
     const params = new URLSearchParams();
     if (searchTerm) params.set('search', searchTerm);
@@ -102,27 +96,24 @@ const Shop = () => {
     }
     if (priceRange[0] !== 0) params.set('priceMin', priceRange[0].toString());
     if (priceRange[1] !== 100) params.set('priceMax', priceRange[1].toString());
-    if (sortOption) params.set('sort', sortOption);
+    if (sortOption && sortOption !== "relevance") params.set('sort', sortOption);
 
     setSearchParams(params);
-    setCurrentPage(1); // Reset to first page when filters change
+    setCurrentPage(1);
   }, [searchTerm, categoryFilter, priceRange, sortOption, setSearchParams]);
 
-  // Category filter options
   const categories = ["Dry Fruits", "Spices", "Gift Boxes", "Premium Spices"];
 
-  // Sorting options
   const sortingOptions = [
-    { label: "Relevance", value: undefined },
+    { label: "Relevance", value: "relevance" },
     { label: "Price: Low to High", value: "price-asc" },
     { label: "Price: High to Low", value: "price-desc" },
-    { label: "Newest Arrivals", value: "date-desc" },
+    { label: "Newest Arrivals", value: "newest" },
   ];
 
-  // Handlers
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
-    window.scrollTo(0, 0); // Scroll to top when page changes
+    window.scrollTo(0, 0);
   };
 
   const handleCategoryChange = (category: string) => {
@@ -137,8 +128,8 @@ const Shop = () => {
     setSearchTerm('');
     setCategoryFilter([]);
     setPriceRange([0, 100]);
-    setSortOption(undefined);
-    navigate('/shop'); // Clear URL parameters
+    setSortOption("relevance");
+    navigate('/shop');
   };
 
   const productsToDisplay = filteredData.length > 0 ? filteredData : paginatedData;
@@ -149,9 +140,7 @@ const Shop = () => {
     <div className="container mx-auto py-12">
       <h1 className="text-3xl font-bold mb-6">Shop</h1>
 
-      {/* Filters and Sorting */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        {/* Search Filter */}
         <div className="md:col-span-1">
           <Input
             type="search"
@@ -161,7 +150,6 @@ const Shop = () => {
           />
         </div>
 
-        {/* Category Filters */}
         <div className="md:col-span-1">
           <h3 className="font-semibold mb-2">Category</h3>
           {categories.map((category) => (
@@ -181,7 +169,6 @@ const Shop = () => {
           ))}
         </div>
 
-        {/* Price Range Filter */}
         <div className="md:col-span-1">
           <h3 className="font-semibold mb-2">Price Range</h3>
           <div className="flex items-center justify-between">
@@ -200,16 +187,16 @@ const Shop = () => {
           </div>
         </div>
 
-        {/* Sorting */}
         <div className="md:col-span-1">
           <Select 
-            onValueChange={(value) => setSortOption(value as SortOption)}>
+            value={sortOption}
+            onValueChange={(value) => setSortOption(value as SortOption | "relevance")}>
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Relevance" />
+              <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>
               {sortingOptions.map((option) => (
-                <SelectItem key={option.value || 'default'} value={option.value || ''}>
+                <SelectItem key={option.value} value={option.value}>
                   {option.label}
                 </SelectItem>
               ))}
@@ -218,12 +205,10 @@ const Shop = () => {
         </div>
       </div>
 
-      {/* Clear Filters Button */}
       <Button variant="outline" onClick={clearFilters} className="mb-6">
         Clear Filters
       </Button>
 
-      {/* Product Grid */}
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {Array(12).fill(0).map((_, index) => (
@@ -255,7 +240,6 @@ const Shop = () => {
             ))}
           </div>
 
-          {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex justify-center mt-8">
               <Button
