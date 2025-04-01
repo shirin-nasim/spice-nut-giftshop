@@ -4,7 +4,7 @@ import { Product } from "@/types/supabase";
 
 // Define the filter parameters type
 export interface ProductFilterParams {
-  category?: string;
+  category?: string | string[];
   minPrice?: number;
   maxPrice?: number;
   rating?: number;
@@ -12,6 +12,11 @@ export interface ProductFilterParams {
   search?: string;
   isNew?: boolean;
   origin?: string;
+  priceMin?: number;
+  priceMax?: number;
+  page?: number;
+  pageSize?: number;
+  sort?: SortOption;
 }
 
 // Define the sort options type
