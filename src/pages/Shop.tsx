@@ -4,7 +4,7 @@ import { useLocation } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { useToast } from "@/hooks/use-toast";
-import { getProducts, getProductsByCategory } from "@/services/productService";
+import { getProductsByCategory, getPaginatedProducts } from "@/services/productService";
 import { Product } from "@/types/supabase";
 
 // Import refactored components
@@ -14,10 +14,13 @@ import ShopToolbar from "@/components/shop/ShopToolbar";
 import ActiveFilters from "@/components/shop/ActiveFilters";
 import ProductsDisplay from "@/components/shop/ProductsDisplay";
 
+const ITEMS_PER_PAGE = 12;
+
 const Shop = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const categoryFromUrl = queryParams.get("category");
+  const pageFromUrl = Number(queryParams.get("page") || "1");
   const { toast } = useToast();
   
   const [products, setProducts] = useState<Product[]>([]);
@@ -27,6 +30,9 @@ const Shop = () => {
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 100]);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(pageFromUrl);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
   
   // Categories based on the products data
   const categories = [
@@ -41,15 +47,20 @@ const Shop = () => {
     const fetchProducts = async () => {
       setLoading(true);
       try {
-        let fetchedProducts;
+        let result;
+        
         if (activeCategory === "all") {
-          fetchedProducts = await getProducts();
+          result = await getPaginatedProducts(currentPage, ITEMS_PER_PAGE);
+          setProducts(result.products);
+          setTotalProducts(result.total);
         } else {
-          fetchedProducts = await getProductsByCategory(activeCategory);
+          // For category-specific products, we'll fetch all and handle pagination client-side for now
+          const fetchedProducts = await getProductsByCategory(activeCategory);
+          setProducts(fetchedProducts);
+          setTotalProducts(fetchedProducts.length);
         }
         
-        console.log(`Fetched ${fetchedProducts.length} products for category ${activeCategory}`);
-        setProducts(fetchedProducts);
+        console.log(`Fetched products for category ${activeCategory}, page ${currentPage}, total: ${totalProducts}`);
       } catch (error) {
         console.error("Error fetching products:", error);
         toast({
@@ -63,9 +74,9 @@ const Shop = () => {
     };
 
     fetchProducts();
-  }, [activeCategory, toast]);
+  }, [activeCategory, currentPage, toast]);
 
-  // Filter products whenever products, sortBy, or priceRange changes
+  // Filter and paginate products whenever products, sortBy, or priceRange changes
   useEffect(() => {
     let result = [...products];
     
@@ -95,18 +106,66 @@ const Shop = () => {
     }
     
     setFilteredProducts(result);
-  }, [products, sortBy, priceRange]);
+    
+    // Only when we're filtering by category client-side (not using server pagination)
+    if (activeCategory !== "all") {
+      // Calculate total pages
+      const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+      const paginatedProducts = result.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+      setDisplayedProducts(paginatedProducts);
+    } else {
+      setDisplayedProducts(result);
+    }
+    
+  }, [products, sortBy, priceRange, currentPage]);
 
-  // Update activeCategory when the URL changes
+  // Update URL when page or category changes
+  useEffect(() => {
+    const newParams = new URLSearchParams(location.search);
+    
+    if (activeCategory !== "all") {
+      newParams.set("category", activeCategory);
+    } else {
+      newParams.delete("category");
+    }
+    
+    if (currentPage > 1) {
+      newParams.set("page", currentPage.toString());
+    } else {
+      newParams.delete("page");
+    }
+    
+    const newSearch = newParams.toString();
+    const newUrl = `${location.pathname}${newSearch ? `?${newSearch}` : ''}`;
+    
+    // Only update if the URL actually changes to avoid unnecessary history entries
+    if (location.search !== `?${newSearch}` && location.search !== '' && newSearch !== '') {
+      window.history.replaceState(null, '', newUrl);
+    }
+  }, [activeCategory, currentPage, location.pathname, location.search]);
+
+  // Update activeCategory and page when the URL changes
   useEffect(() => {
     const category = queryParams.get("category") || "all";
+    const page = Number(queryParams.get("page") || "1");
+    
     setActiveCategory(category);
+    setCurrentPage(page);
   }, [location.search]);
+
+  const totalPages = Math.ceil(totalProducts / ITEMS_PER_PAGE);
 
   // Reset filters helper function
   const resetFilters = () => {
     setActiveCategory("all");
     setPriceRange([0, 100]);
+    setCurrentPage(1);
+  };
+
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
@@ -132,7 +191,7 @@ const Shop = () => {
             <div className="flex-1">
               {/* Toolbar */}
               <ShopToolbar 
-                productsCount={filteredProducts.length}
+                productsCount={totalProducts}
                 sortBy={sortBy}
                 setSortBy={setSortBy}
                 viewMode={viewMode}
@@ -155,9 +214,13 @@ const Shop = () => {
               {/* Products Display */}
               <ProductsDisplay 
                 loading={loading}
-                filteredProducts={filteredProducts}
+                filteredProducts={displayedProducts}
                 viewMode={viewMode}
                 resetFilters={resetFilters}
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+                itemsPerPage={ITEMS_PER_PAGE}
               />
             </div>
           </div>
