@@ -5,33 +5,33 @@
 
 @layer base {
   :root {
-    --background: 36 33% 98%;
-    --foreground: 20 14.3% 15.1%;
+    --background: 150 50% 98%;
+    --foreground: 160 14.3% 15.1%;
 
     --card: 0 0% 100%;
-    --card-foreground: 20 14.3% 15.1%;
+    --card-foreground: 160 14.3% 15.1%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 20 14.3% 15.1%;
+    --popover-foreground: 160 14.3% 15.1%;
 
-    --primary: 24 9.8% 10%;
+    --primary: 152 60% 25%;
     --primary-foreground: 60 9.1% 97.8%;
 
-    --secondary: 60 4.8% 95.9%;
-    --secondary-foreground: 24 9.8% 10%;
+    --secondary: 150 10% 95%;
+    --secondary-foreground: 152 60% 25%;
 
-    --muted: 60 4.8% 95.9%;
-    --muted-foreground: 25 5.3% 44.7%;
+    --muted: 150 10% 95%;
+    --muted-foreground: 160 5.3% 44.7%;
 
-    --accent: 60 4.8% 95.9%;
-    --accent-foreground: 24 9.8% 10%;
+    --accent: 150 10% 95%;
+    --accent-foreground: 152 60% 25%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 60 9.1% 97.8%;
 
-    --border: 20 5.9% 90%;
-    --input: 20 5.9% 90%;
-    --ring: 24 5.4% 63.9%;
+    --border: 150 12% 90%;
+    --input: 150 12% 90%;
+    --ring: 152 30% 63.9%;
 
     --radius: 0.5rem;
 
@@ -116,5 +116,5 @@
 }
 
 .underline-animation {
-  @apply relative after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-0 after:bg-brand-brown after:transition-all after:duration-300 hover:after:w-full;
+  @apply relative after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-0 after:bg-emerald-600 after:transition-all after:duration-300 hover:after:w-full;
 }

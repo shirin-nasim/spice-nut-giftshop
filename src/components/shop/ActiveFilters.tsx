@@ -28,7 +28,7 @@ const ActiveFilters: React.FC<ActiveFiltersProps> = ({
   return (
     <div className="mb-6 flex flex-wrap gap-2">
       {activeCategory !== "all" && (
-        <div className="bg-brand-beige-light text-foreground text-sm rounded-full px-3 py-1 flex items-center">
+        <div className="bg-emerald-100 text-emerald-800 text-sm rounded-full px-3 py-1 flex items-center">
           <span>Category: {categories.find(cat => cat.id === activeCategory)?.name}</span>
           <Button
             variant="ghost"
@@ -45,7 +45,7 @@ const ActiveFilters: React.FC<ActiveFiltersProps> = ({
       )}
       
       {(priceRange[0] > 0 || priceRange[1] < 100) && (
-        <div className="bg-brand-beige-light text-foreground text-sm rounded-full px-3 py-1 flex items-center">
+        <div className="bg-emerald-100 text-emerald-800 text-sm rounded-full px-3 py-1 flex items-center">
           <span>Price: ${priceRange[0]} - ${priceRange[1] === 100 ? "100+" : priceRange[1]}</span>
           <Button
             variant="ghost"
@@ -60,7 +60,7 @@ const ActiveFilters: React.FC<ActiveFiltersProps> = ({
       
       <Button
         variant="link"
-        className="text-muted-foreground text-sm p-0 h-auto"
+        className="text-emerald-700 text-sm p-0 h-auto"
         onClick={() => {
           setActiveCategory("all");
           setPriceRange([0, 100]);

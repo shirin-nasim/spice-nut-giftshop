@@ -39,11 +39,11 @@ const ProductsDisplay: React.FC<ProductsDisplayProps> = ({
     return (
       <div className="text-center py-20">
         <div className="flex justify-center items-center gap-2">
-          <div className="w-4 h-4 rounded-full bg-brand-brown animate-bounce" style={{ animationDelay: "0ms" }}></div>
-          <div className="w-4 h-4 rounded-full bg-brand-brown animate-bounce" style={{ animationDelay: "150ms" }}></div>
-          <div className="w-4 h-4 rounded-full bg-brand-brown animate-bounce" style={{ animationDelay: "300ms" }}></div>
+          <div className="w-4 h-4 rounded-full bg-emerald-500 animate-bounce" style={{ animationDelay: "0ms" }}></div>
+          <div className="w-4 h-4 rounded-full bg-emerald-500 animate-bounce" style={{ animationDelay: "150ms" }}></div>
+          <div className="w-4 h-4 rounded-full bg-emerald-500 animate-bounce" style={{ animationDelay: "300ms" }}></div>
         </div>
-        <p className="text-xl text-muted-foreground mt-4">Loading products...</p>
+        <p className="text-xl text-gray-500 mt-4">Loading products...</p>
       </div>
     );
   }
@@ -52,11 +52,11 @@ const ProductsDisplay: React.FC<ProductsDisplayProps> = ({
     return (
       <div className="text-center py-20 animate-fade-in">
         <div className="text-6xl mb-4">🔍</div>
-        <p className="text-xl text-muted-foreground mb-4">No products found</p>
-        <p className="text-muted-foreground">Try adjusting your filters or browse all products</p>
+        <p className="text-xl text-gray-500 mb-4">No products found</p>
+        <p className="text-gray-500">Try adjusting your filters or browse all products</p>
         <Button 
           variant="outline" 
-          className="mt-4 hover:bg-brand-beige hover:text-brand-brown transition-colors duration-300"
+          className="mt-4 hover:bg-emerald-50 hover:text-emerald-700 border-emerald-200"
           onClick={resetFilters}
         >
           Clear All Filters
@@ -156,7 +156,7 @@ const ProductsDisplay: React.FC<ProductsDisplayProps> = ({
                 <PaginationPrevious 
                   onClick={() => onPageChange(currentPage - 1)}
                   href="#"
-                  className="hover:bg-brand-beige hover:text-brand-brown transition-colors duration-300"
+                  className="hover:bg-emerald-50 hover:text-emerald-700 transition-colors duration-300"
                 />
               </PaginationItem>
             )}
@@ -175,7 +175,7 @@ const ProductsDisplay: React.FC<ProductsDisplayProps> = ({
                     }}
                     href="#"
                     isActive={currentPage === page}
-                    className={currentPage === page ? "bg-brand-brown hover:bg-brand-brown-dark" : "hover:bg-brand-beige hover:text-brand-brown"}
+                    className={currentPage === page ? "bg-emerald-600 hover:bg-emerald-700" : "hover:bg-emerald-50 hover:text-emerald-700"}
                   >
                     {page}
                   </PaginationLink>
@@ -188,7 +188,7 @@ const ProductsDisplay: React.FC<ProductsDisplayProps> = ({
                 <PaginationNext 
                   onClick={() => onPageChange(currentPage + 1)}
                   href="#"
-                  className="hover:bg-brand-beige hover:text-brand-brown transition-colors duration-300"
+                  className="hover:bg-emerald-50 hover:text-emerald-700 transition-colors duration-300"
                 />
               </PaginationItem>
             )}

@@ -40,7 +40,7 @@ const ShopToolbar: React.FC<ShopToolbarProps> = ({
           placeholder="Search products..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full"
+          className="w-full border-emerald-200 focus:border-emerald-400"
         />
       </div>
       
@@ -49,10 +49,10 @@ const ShopToolbar: React.FC<ShopToolbarProps> = ({
           value={sortOption} 
           onValueChange={(value) => setSortOption(value as SortOption | "relevance")}
         >
-          <SelectTrigger className="w-full md:w-[180px]">
+          <SelectTrigger className="w-full md:w-[180px] border-emerald-200 focus:border-emerald-400">
             <SelectValue placeholder="Sort by" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-white border-emerald-200">
             {sortingOptions.map((option) => (
               <SelectItem key={option.value} value={option.value}>
                 {option.label}
@@ -66,7 +66,7 @@ const ShopToolbar: React.FC<ShopToolbarProps> = ({
             variant={viewMode === "grid" ? "default" : "outline"}
             size="icon"
             onClick={() => setViewMode("grid")}
-            className="h-9 w-9"
+            className={`h-9 w-9 ${viewMode === "grid" ? "bg-emerald-600 hover:bg-emerald-700" : "border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700"}`}
           >
             <Grid2x2 size={16} />
           </Button>
@@ -74,7 +74,7 @@ const ShopToolbar: React.FC<ShopToolbarProps> = ({
             variant={viewMode === "list" ? "default" : "outline"}
             size="icon"
             onClick={() => setViewMode("list")}
-            className="h-9 w-9"
+            className={`h-9 w-9 ${viewMode === "list" ? "bg-emerald-600 hover:bg-emerald-700" : "border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700"}`}
           >
             <List size={16} />
           </Button>

@@ -12,7 +12,7 @@ const ProductListItem: React.FC<ProductListItemProps> = ({ product }) => {
   return (
     <Link
       to={`/product/${product.slug || product.id}`}
-      className="flex bg-white rounded-xl shadow-premium-sm hover:shadow-premium-md transition-all duration-300 overflow-hidden"
+      className="flex bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden border border-gray-100"
     >
       <div className="w-1/3">
         <img 
@@ -22,14 +22,14 @@ const ProductListItem: React.FC<ProductListItemProps> = ({ product }) => {
         />
       </div>
       <div className="w-2/3 p-4 flex flex-col">
-        <h3 className="font-medium text-primary">{product.name}</h3>
-        <p className="text-xs text-muted-foreground mt-1 capitalize">{product.category}</p>
+        <h3 className="font-medium text-emerald-800">{product.name}</h3>
+        <p className="text-xs text-gray-500 mt-1 capitalize">{product.category}</p>
         <div className="flex mt-1">
           {Array.from({ length: 5 }).map((_, i) => (
             <svg 
               key={i} 
               className={`w-3.5 h-3.5 ${
-                i < product.rating ? "text-brand-gold" : "text-muted"
+                i < product.rating ? "text-amber-400" : "text-gray-300"
               }`} 
               fill="currentColor"
               viewBox="0 0 20 20"
@@ -40,14 +40,14 @@ const ProductListItem: React.FC<ProductListItemProps> = ({ product }) => {
         </div>
         <div className="mt-auto flex items-center justify-between">
           <div className="flex items-center">
-            <span className="font-semibold text-brand-brown-dark">${product.price.toFixed(2)}</span>
+            <span className="font-semibold text-emerald-800">${product.price.toFixed(2)}</span>
             {product.originalPrice && (
-              <span className="ml-2 text-sm text-muted-foreground line-through">
+              <span className="ml-2 text-sm text-gray-500 line-through">
                 ${product.originalPrice.toFixed(2)}
               </span>
             )}
           </div>
-          <Button variant="ghost" size="sm" className="text-brand-brown hover:text-brand-brown-dark hover:bg-brand-beige-light">
+          <Button variant="ghost" size="sm" className="text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50">
             View Product
           </Button>
         </div>

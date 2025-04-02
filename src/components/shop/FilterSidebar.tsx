@@ -29,8 +29,8 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
   };
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow-premium-sm">
-      <h3 className="font-semibold mb-4">Categories</h3>
+    <div className="bg-white p-6 rounded-xl shadow-sm border border-emerald-100">
+      <h3 className="font-semibold mb-4 text-emerald-800">Categories</h3>
       <ul className="space-y-2">
         {categories.map(category => (
           <li key={category.id}>
@@ -38,8 +38,8 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
               onClick={() => handleCategoryClick(category.id)}
               className={`block w-full text-left py-2 px-3 rounded-md transition ${
                 activeCategory === category.id
-                  ? "bg-brand-beige text-brand-brown font-medium"
-                  : "text-muted-foreground hover:text-foreground hover:bg-brand-beige-light"
+                  ? "bg-emerald-100 text-emerald-800 font-medium"
+                  : "text-gray-600 hover:text-emerald-700 hover:bg-emerald-50"
               }`}
             >
               {category.name}
@@ -49,13 +49,13 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
       </ul>
 
       <div className="mt-8">
-        <h3 className="font-semibold mb-4">Price Range</h3>
+        <h3 className="font-semibold mb-4 text-emerald-800">Price Range</h3>
         <div className="px-2">
           <div className="flex mb-1 justify-between">
-            <span className="text-sm text-muted-foreground">${priceRange[0]}</span>
-            <span className="text-sm text-muted-foreground">${priceRange[1] === 100 ? "100+" : priceRange[1]}</span>
+            <span className="text-sm text-gray-600">${priceRange[0]}</span>
+            <span className="text-sm text-gray-600">${priceRange[1] === 100 ? "100+" : priceRange[1]}</span>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex flex-col space-y-4">
             <input
               type="range"
               min="0"
@@ -63,7 +63,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
               step="5"
               value={priceRange[0]}
               onChange={(e) => setPriceRange([parseInt(e.target.value), priceRange[1]])}
-              className="w-full accent-brand-brown"
+              className="w-full accent-emerald-600"
             />
             <input
               type="range"
@@ -72,25 +72,25 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
               step="5"
               value={priceRange[1]}
               onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
-              className="w-full accent-brand-brown"
+              className="w-full accent-emerald-600"
             />
           </div>
         </div>
       </div>
 
       <div className="mt-8">
-        <h3 className="font-semibold mb-4">Customer Rating</h3>
+        <h3 className="font-semibold mb-4 text-emerald-800">Customer Rating</h3>
         <ul className="space-y-2">
           {[5, 4, 3, 2, 1].map(stars => (
             <li key={stars}>
               <label className="flex items-center cursor-pointer">
-                <input type="checkbox" className="rounded text-brand-brown border-brand-beige-dark focus:ring-brand-brown/25 mr-2" />
+                <input type="checkbox" className="rounded text-emerald-600 border-gray-300 focus:ring-emerald-500/25 mr-2" />
                 <div className="flex">
                   {Array.from({ length: 5 }).map((_, i) => (
                     <svg 
                       key={i} 
                       className={`w-4 h-4 ${
-                        i < stars ? "text-brand-gold" : "text-gray-300"
+                        i < stars ? "text-amber-400" : "text-gray-300"
                       }`} 
                       fill="currentColor"
                       viewBox="0 0 20 20"
@@ -99,7 +99,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                     </svg>
                   ))}
                 </div>
-                <span className="ml-1 text-muted-foreground text-sm">& Up</span>
+                <span className="ml-1 text-gray-600 text-sm">& Up</span>
               </label>
             </li>
           ))}

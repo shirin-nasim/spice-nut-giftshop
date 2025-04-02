@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Product } from "@/types/supabase";
 
@@ -37,7 +36,7 @@ export const searchProducts = async (
   pageSize: number = 12
 ): Promise<{ products: Product[]; total: number }> => {
   try {
-    console.info(`Fetching paginated products: page ${page}, pageSize ${pageSize}`);
+    console.info(`Fetching paginated products: page ${page}, pageSize ${pageSize}, filters:`, filters);
     
     // Start building the query
     let query = supabase
@@ -49,10 +48,22 @@ export const searchProducts = async (
       // Handle category filter based on whether it's a string or array
       if (Array.isArray(filters.category)) {
         if (filters.category.length > 0) {
-          query = query.in('category', filters.category.map(cat => cat.toLowerCase()));
+          query = query.in('category', filters.category.map(cat => {
+            // Convert URL-friendly format to database format
+            if (cat === "dry-fruits") return "dry fruits";
+            if (cat === "premium-spices") return "premium spices";
+            if (cat === "gift-boxes") return "gift boxes";
+            return cat;
+          }));
         }
       } else {
-        query = query.ilike("category", `%${filters.category.toLowerCase()}%`);
+        // Convert URL-friendly format to database format
+        let dbCategory = filters.category;
+        if (filters.category === "dry-fruits") dbCategory = "dry fruits";
+        if (filters.category === "premium-spices") dbCategory = "premium spices";
+        if (filters.category === "gift-boxes") dbCategory = "gift boxes";
+        
+        query = query.eq("category", dbCategory);
       }
     }
     
@@ -125,6 +136,9 @@ export const searchProducts = async (
       throw error;
     }
     
+    console.info(`Retrieved ${data.length} products (total: ${count})`);
+    console.info("Sample data:", data.slice(0, 2));
+    
     const products = data.map((product: any) => ({
       id: product.id,
       name: product.name,
@@ -147,8 +161,6 @@ export const searchProducts = async (
       createdAt: product.created_at,
       updatedAt: product.updated_at
     }));
-    
-    console.info(`Retrieved ${products.length} products (total: ${count})`);
     
     return {
       products,
@@ -176,10 +188,8 @@ export const getProductsByCategory = async (
       return searchProducts({}, "popularity", page, pageSize);
     }
     
-    // Map URL-friendly category IDs to database categories
-    let dbCategory = categoryId;
-    
     // Convert URL-friendly format to database format
+    let dbCategory = categoryId;
     if (categoryId === "dry-fruits") {
       dbCategory = "dry fruits";
     } else if (categoryId === "premium-spices") {
@@ -187,6 +197,8 @@ export const getProductsByCategory = async (
     } else if (categoryId === "gift-boxes") {
       dbCategory = "gift boxes";
     }
+    
+    console.info(`Mapped category ${categoryId} to database category ${dbCategory}`);
     
     const result = await searchProducts(
       { category: dbCategory },

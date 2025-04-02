@@ -31,12 +31,12 @@ const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
   };
 
   return (
-    <SheetContent side="left">
+    <SheetContent side="left" className="bg-white">
       <SheetHeader>
-        <SheetTitle>Filters</SheetTitle>
+        <SheetTitle className="text-emerald-800">Filters</SheetTitle>
       </SheetHeader>
       <div className="py-4">
-        <h3 className="font-semibold mb-4">Categories</h3>
+        <h3 className="font-semibold mb-4 text-emerald-800">Categories</h3>
         <ul className="space-y-2">
           {categories.map(category => (
             <li key={category.id}>
@@ -44,8 +44,8 @@ const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
                 variant="ghost"
                 className={`w-full justify-start py-2 px-3 h-auto ${
                   activeCategory === category.id
-                    ? "bg-brand-beige text-brand-brown font-medium"
-                    : "text-muted-foreground hover:text-foreground hover:bg-brand-beige-light"
+                    ? "bg-emerald-100 text-emerald-800 font-medium"
+                    : "text-gray-600 hover:text-emerald-700 hover:bg-emerald-50"
                 }`}
                 onClick={() => handleCategoryClick(category.id)}
               >
@@ -56,11 +56,11 @@ const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
         </ul>
 
         <div className="mt-8">
-          <h3 className="font-semibold mb-4">Price Range</h3>
+          <h3 className="font-semibold mb-4 text-emerald-800">Price Range</h3>
           <div className="px-2">
             <div className="flex mb-1 justify-between">
-              <span className="text-sm text-muted-foreground">${priceRange[0]}</span>
-              <span className="text-sm text-muted-foreground">${priceRange[1] === 100 ? "100+" : priceRange[1]}</span>
+              <span className="text-sm text-gray-600">${priceRange[0]}</span>
+              <span className="text-sm text-gray-600">${priceRange[1] === 100 ? "100+" : priceRange[1]}</span>
             </div>
             <div className="flex flex-col space-y-4">
               <input
@@ -70,7 +70,7 @@ const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
                 step="5"
                 value={priceRange[0]}
                 onChange={(e) => setPriceRange([parseInt(e.target.value), priceRange[1]])}
-                className="w-full accent-brand-brown"
+                className="w-full accent-emerald-600"
               />
               <input
                 type="range"
@@ -79,7 +79,7 @@ const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
                 step="5"
                 value={priceRange[1]}
                 onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
-                className="w-full accent-brand-brown"
+                className="w-full accent-emerald-600"
               />
             </div>
           </div>
