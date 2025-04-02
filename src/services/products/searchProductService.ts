@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Product } from "@/types/supabase";
 
@@ -27,6 +26,14 @@ export type SortOption =
   | "newest" 
   | "popularity";
 
+// Helper function to convert URL-friendly category names to database format
+const convertCategoryFormat = (category: string): string => {
+  if (category === "dry-fruits") return "dry fruits";
+  if (category === "premium-spices") return "premium spices";
+  if (category === "gift-boxes") return "gift boxes";
+  return category;
+};
+
 /**
  * Search for products with filters and pagination
  */
@@ -49,21 +56,11 @@ export const searchProducts = async (
       // Handle category filter based on whether it's a string or array
       if (Array.isArray(filters.category)) {
         if (filters.category.length > 0) {
-          query = query.in('category', filters.category.map(cat => {
-            // Convert URL-friendly format to database format
-            if (cat === "dry-fruits") return "dry fruits";
-            if (cat === "premium-spices") return "premium spices";
-            if (cat === "gift-boxes") return "gift boxes";
-            return cat;
-          }));
+          query = query.in('category', filters.category.map(convertCategoryFormat));
         }
       } else {
         // Convert URL-friendly format to database format
-        let dbCategory = filters.category;
-        if (filters.category === "dry-fruits") dbCategory = "dry fruits";
-        if (filters.category === "premium-spices") dbCategory = "premium spices";
-        if (filters.category === "gift-boxes") dbCategory = "gift boxes";
-        
+        let dbCategory = convertCategoryFormat(filters.category);
         query = query.eq("category", dbCategory);
       }
     }
@@ -189,18 +186,11 @@ export const getProductsByCategory = async (
     }
     
     // Convert URL-friendly format to database format
-    let dbCategory = categoryId;
-    if (categoryId === "dry-fruits") {
-      dbCategory = "dry fruits";
-    } else if (categoryId === "premium-spices") {
-      dbCategory = "premium spices";
-    } else if (categoryId === "gift-boxes") {
-      dbCategory = "gift boxes";
-    }
+    let dbCategory = convertCategoryFormat(categoryId);
     
     console.info(`Mapped category ${categoryId} to database category ${dbCategory}`);
     
-    // Using ilike to make the search case-insensitive
+    // Using searchProducts to get products with category filter
     const result = await searchProducts(
       { category: dbCategory },
       "popularity",

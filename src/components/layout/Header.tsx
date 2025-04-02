@@ -31,9 +31,9 @@ const Header = () => {
 
   const navItems = [
     { name: "Home", path: "/" },
-    { name: "Dry Fruits", path: "/shop/category/dry-fruits" },
-    { name: "Spices", path: "/shop/category/spices" },
-    { name: "Gift Boxes", path: "/shop/category/gift-boxes" },
+    { name: "Dry Fruits", path: "/dry-fruits" },
+    { name: "Spices", path: "/spices" },
+    { name: "Gift Boxes", path: "/gift-boxes" },
     { name: "Corporate Gifting", path: "/corporate-gifting" },
     { name: "Blog", path: "/blog" },
   ];
