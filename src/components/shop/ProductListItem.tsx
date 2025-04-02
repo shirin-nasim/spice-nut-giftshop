@@ -13,7 +13,7 @@ const ProductListItem: React.FC<ProductListItemProps> = ({ product }) => {
   return (
     <Link
       to={`/product/${product.slug || product.id}`}
-      className="flex bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden border border-gray-100"
+      className="flex bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden border border-emerald-100"
     >
       <div className="w-1/3">
         <img 

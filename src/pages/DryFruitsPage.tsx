@@ -1,5 +1,5 @@
-
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -27,7 +27,6 @@ const DryFruitsPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortOption, setSortOption] = useState<"popularity" | "price-asc" | "price-desc">("popularity");
 
-  // Fetch dry fruits
   const { data, isLoading } = useQuery({
     queryKey: ['dry-fruits', searchTerm, sortOption, currentPage],
     queryFn: async () => {
@@ -51,7 +50,6 @@ const DryFruitsPage = () => {
     window.scrollTo(0, 0);
   };
 
-  // Generate pagination items
   const generatePaginationItems = () => {
     const items = [];
     const maxPagesToShow = 5;
@@ -88,10 +86,8 @@ const DryFruitsPage = () => {
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
       
-      {/* Add top margin to account for fixed header */}
       <div className="pt-24"></div>
       
-      {/* Hero Section */}
       <div className="bg-emerald-50">
         <div className="premium-container py-10 md:py-16">
           <h1 className="text-3xl md:text-4xl font-bold text-emerald-800 mb-4">
@@ -114,7 +110,6 @@ const DryFruitsPage = () => {
       </div>
       
       <div className="premium-container py-8 flex-grow">
-        {/* Search and Sort */}
         <div className="flex flex-col md:flex-row gap-4 mb-8">
           <div className="w-full md:w-1/2">
             <Input
@@ -158,7 +153,6 @@ const DryFruitsPage = () => {
           </div>
         </div>
         
-        {/* Loading State */}
         {isLoading && (
           <div className="text-center py-20">
             <div className="flex justify-center items-center gap-2">
@@ -170,7 +164,6 @@ const DryFruitsPage = () => {
           </div>
         )}
         
-        {/* No Products State */}
         {!isLoading && products.length === 0 && (
           <div className="text-center py-20 animate-fade-in">
             <div className="text-6xl mb-4">🔍</div>
@@ -179,7 +172,6 @@ const DryFruitsPage = () => {
           </div>
         )}
         
-        {/* Products Display */}
         {!isLoading && products.length > 0 && (
           <motion.div 
             initial={{ opacity: 0, y: 10 }}
@@ -214,7 +206,6 @@ const DryFruitsPage = () => {
           </motion.div>
         )}
         
-        {/* Pagination */}
         {totalPages > 1 && (
           <Pagination className="mt-8">
             <PaginationContent>

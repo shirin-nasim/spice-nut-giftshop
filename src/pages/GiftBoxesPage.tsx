@@ -1,5 +1,5 @@
-
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,6 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Link } from "react-router-dom";
 
 const PRODUCTS_PER_PAGE = 12;
 
@@ -28,7 +27,6 @@ const GiftBoxesPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortOption, setSortOption] = useState<"popularity" | "price-asc" | "price-desc">("popularity");
 
-  // Fetch gift boxes
   const { data, isLoading } = useQuery({
     queryKey: ['gift-boxes', searchTerm, sortOption, currentPage],
     queryFn: async () => {
@@ -52,7 +50,6 @@ const GiftBoxesPage = () => {
     window.scrollTo(0, 0);
   };
 
-  // Generate pagination items
   const generatePaginationItems = () => {
     const items = [];
     const maxPagesToShow = 5;
@@ -89,10 +86,8 @@ const GiftBoxesPage = () => {
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
       
-      {/* Add top margin to account for fixed header */}
       <div className="pt-24"></div>
       
-      {/* Hero Section */}
       <div className="bg-emerald-50">
         <div className="premium-container py-10 md:py-16">
           <h1 className="text-3xl md:text-4xl font-bold text-emerald-800 mb-4">
@@ -115,7 +110,6 @@ const GiftBoxesPage = () => {
       </div>
       
       <div className="premium-container py-8 flex-grow">
-        {/* Search and Sort */}
         <div className="flex flex-col md:flex-row gap-4 mb-8">
           <div className="w-full md:w-1/2">
             <Input
@@ -159,7 +153,6 @@ const GiftBoxesPage = () => {
           </div>
         </div>
         
-        {/* Loading State */}
         {isLoading && (
           <div className="text-center py-20">
             <div className="flex justify-center items-center gap-2">
@@ -171,7 +164,6 @@ const GiftBoxesPage = () => {
           </div>
         )}
         
-        {/* No Products State */}
         {!isLoading && products.length === 0 && (
           <div className="text-center py-20 animate-fade-in">
             <div className="text-6xl mb-4">🔍</div>
@@ -180,7 +172,6 @@ const GiftBoxesPage = () => {
           </div>
         )}
         
-        {/* Products Display */}
         {!isLoading && products.length > 0 && (
           <motion.div 
             initial={{ opacity: 0, y: 10 }}
@@ -215,7 +206,6 @@ const GiftBoxesPage = () => {
           </motion.div>
         )}
         
-        {/* Pagination */}
         {totalPages > 1 && (
           <Pagination className="mt-8">
             <PaginationContent>

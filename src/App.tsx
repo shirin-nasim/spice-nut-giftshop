@@ -9,7 +9,6 @@ import { CartProvider } from "@/hooks/useCart";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import ProductDetail from "./pages/ProductDetail";
-import Shop from "./pages/Shop";
 import DryFruitsPage from "./pages/DryFruitsPage";
 import SpicesPage from "./pages/SpicesPage";
 import GiftBoxesPage from "./pages/GiftBoxesPage";
@@ -38,8 +37,6 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/product/:productId" element={<ProductDetail />} />
-              <Route path="/shop" element={<Shop />} />
-              <Route path="/shop/category/:categoryId" element={<Shop />} />
               <Route path="/dry-fruits" element={<DryFruitsPage />} />
               <Route path="/spices" element={<SpicesPage />} />
               <Route path="/gift-boxes" element={<GiftBoxesPage />} />
