@@ -31,9 +31,9 @@ const Header = () => {
 
   const navItems = [
     { name: "Home", path: "/" },
-    { name: "Dry Fruits", path: "/shop?category=dry-fruits" },
-    { name: "Spices", path: "/shop?category=spices" },
-    { name: "Gift Boxes", path: "/shop?category=gift-boxes" },
+    { name: "Dry Fruits", path: "/shop/category/dry-fruits" },
+    { name: "Spices", path: "/shop/category/spices" },
+    { name: "Gift Boxes", path: "/shop/category/gift-boxes" },
     { name: "Corporate Gifting", path: "/corporate-gifting" },
     { name: "Blog", path: "/blog" },
   ];
@@ -67,7 +67,7 @@ const Header = () => {
                 to={item.path}
                 className={`text-sm font-medium transition-all duration-300 underline-animation ${
                   location.pathname === item.path || 
-                  (location.pathname === "/shop" && location.search.includes(item.path.split("?")[1] || ""))
+                  (location.pathname.includes("/shop") && location.pathname.includes(item.path.split("category/")[1] || ""))
                     ? "text-brand-brown font-semibold"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
@@ -156,7 +156,7 @@ const Header = () => {
                   style={{"--index": index} as React.CSSProperties}
                   className={`text-sm font-medium px-4 py-2 rounded-md slide-animation ${
                     location.pathname === item.path || 
-                    (location.pathname === "/shop" && location.search.includes(item.path.split("?")[1] || ""))
+                    (location.pathname.includes("/shop") && location.pathname.includes(item.path.split("category/")[1] || ""))
                       ? "bg-brand-beige text-brand-brown font-semibold"
                       : "text-muted-foreground hover:bg-brand-beige/50 hover:text-foreground"
                   }`}

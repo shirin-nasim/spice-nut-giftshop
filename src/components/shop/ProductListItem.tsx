@@ -29,7 +29,7 @@ const ProductListItem: React.FC<ProductListItemProps> = ({ product }) => {
             <svg 
               key={i} 
               className={`w-3.5 h-3.5 ${
-                i < product.rating ? "text-amber-400" : "text-gray-300"
+                i < (product.rating || 0) ? "text-amber-400" : "text-gray-300"
               }`} 
               fill="currentColor"
               viewBox="0 0 20 20"

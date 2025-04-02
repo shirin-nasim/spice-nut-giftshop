@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -45,6 +46,7 @@ const Shop = () => {
   useEffect(() => {
     if (categoryId) {
       setActiveCategory(categoryId);
+      console.log("Category ID from params:", categoryId);
     }
   }, [categoryId]);
 
@@ -52,6 +54,8 @@ const Shop = () => {
   const { data, isLoading, isError } = useQuery({
     queryKey: ['products', activeCategory, debouncedSearchTerm, priceRange, sortOption, currentPage],
     queryFn: async () => {
+      console.log("Fetching products for category:", activeCategory);
+      
       if (activeCategory !== "all") {
         return getProductsByCategory(activeCategory, currentPage, PRODUCTS_PER_PAGE);
       } else {
@@ -97,8 +101,11 @@ const Shop = () => {
       params.set('page', currentPage.toString());
     }
     
-    setSearchParams(params);
-  }, [activeCategory, debouncedSearchTerm, priceRange, sortOption, currentPage, setSearchParams]);
+    // Only update search params if we're on the main shop page
+    if (!categoryId) {
+      setSearchParams(params);
+    }
+  }, [activeCategory, debouncedSearchTerm, priceRange, sortOption, currentPage, setSearchParams, categoryId]);
 
   // Reset pagination when filters change
   useEffect(() => {
@@ -129,18 +136,23 @@ const Shop = () => {
     { id: "all", name: "All Products" },
     { id: "dry-fruits", name: "Dry Fruits" },
     { id: "spices", name: "Spices" },
-    { id: "premium-spices", name: "Premium Spices" },
     { id: "gift-boxes", name: "Gift Boxes" },
   ];
 
+  console.log("Current Active Category:", activeCategory);
+  console.log("Current Products:", data?.products);
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Add top margin to account for fixed header */}
+      <div className="pt-24"></div>
+      
       <ShopHero 
         activeCategory={activeCategory} 
         categories={categories} 
       />
       
-      <div className="premium-container py-8">
+      <div className="premium-container py-8 flex-grow">
         {/* Mobile filter toggle */}
         <div className="flex md:hidden items-center justify-between mb-4">
           <Button 

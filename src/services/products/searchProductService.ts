@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Product } from "@/types/supabase";
 
@@ -136,10 +137,9 @@ export const searchProducts = async (
       throw error;
     }
     
-    console.info(`Retrieved ${data.length} products (total: ${count})`);
-    console.info("Sample data:", data.slice(0, 2));
+    console.info(`Retrieved ${data?.length} products (total: ${count})`);
     
-    const products = data.map((product: any) => ({
+    const products = data?.map((product: any) => ({
       id: product.id,
       name: product.name,
       price: product.price,
@@ -160,7 +160,7 @@ export const searchProducts = async (
       slug: product.slug,
       createdAt: product.created_at,
       updatedAt: product.updated_at
-    }));
+    })) || [];
     
     return {
       products,
@@ -200,6 +200,7 @@ export const getProductsByCategory = async (
     
     console.info(`Mapped category ${categoryId} to database category ${dbCategory}`);
     
+    // Using ilike to make the search case-insensitive
     const result = await searchProducts(
       { category: dbCategory },
       "popularity",

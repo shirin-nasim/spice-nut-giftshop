@@ -5,7 +5,7 @@ import { Mail, Phone, Instagram, Facebook, Twitter, Youtube, MapPin } from "luci
 
 const Footer = () => {
   return (
-    <footer className="bg-brand-beige-dark text-primary">
+    <footer className="bg-brand-beige-dark text-primary mt-auto">
       <div className="premium-container">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 py-16">
           {/* Column 1: About Us */}
@@ -60,9 +60,9 @@ const Footer = () => {
             <h3 className="text-lg font-medium">Categories</h3>
             <ul className="space-y-3">
               {[
-                { name: "Premium Dry Fruits", path: "/shop?category=dry-fruits" },
-                { name: "Exotic Spices", path: "/shop?category=spices" },
-                { name: "Gift Boxes", path: "/shop?category=gift-boxes" },
+                { name: "Dry Fruits", path: "/shop/category/dry-fruits" },
+                { name: "Spices", path: "/shop/category/spices" },
+                { name: "Gift Boxes", path: "/shop/category/gift-boxes" },
                 { name: "Bulk Orders", path: "/bulk-orders" },
                 { name: "New Arrivals", path: "/shop?sort=new" },
               ].map((item) => (
