@@ -1,266 +1,233 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Product } from '@/types/supabase';
-import { getPaginatedProducts, ProductFilterParams, SortOption } from '@/services/productService';
-import ProductCard from '@/components/ui/ProductCard';
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
-import { Checkbox } from "@/components/ui/checkbox";
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { useDebounce } from '@/hooks/useDebounce';
-import { useSearchParams, useNavigate } from 'react-router-dom';
-import { cn } from "@/lib/utils";
+import { useQuery } from '@tanstack/react-query';
+import { Sheet } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { SlidersHorizontal, Grid2x2, List } from "lucide-react";
+
+import { searchProducts, getProductsByCategory, ProductFilterParams, SortOption } from '@/services/products/searchProductService';
+import ShopHero from '@/components/shop/ShopHero';
+import ProductsDisplay from '@/components/shop/ProductsDisplay';
+import FilterSidebar from '@/components/shop/FilterSidebar';
+import MobileFilterDrawer from '@/components/shop/MobileFilterDrawer';
+import ActiveFilters from '@/components/shop/ActiveFilters';
+import ShopToolbar from '@/components/shop/ShopToolbar';
 
 const PRODUCTS_PER_PAGE = 12;
 
 const Shop = () => {
-  const [paginatedData, setPaginatedData] = useState<Product[]>([]);
-  const [filteredData, setFilteredData] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [totalProducts, setTotalProducts] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
+  const { categoryId } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-
+  
+  // View state
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
+  
+  // Filter states
+  const [activeCategory, setActiveCategory] = useState<string>(categoryId || searchParams.get('category') || "all");
   const [searchTerm, setSearchTerm] = useState<string>(searchParams.get('search') || '');
-  const [categoryFilter, setCategoryFilter] = useState<string[]>(searchParams.getAll('category') || []);
-  const [priceRange, setPriceRange] = useState<number[]>([0, 100]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([
+    parseInt(searchParams.get('priceMin') || '0'),
+    parseInt(searchParams.get('priceMax') || '100'),
+  ]);
   const [sortOption, setSortOption] = useState<SortOption | "relevance">(
-    (searchParams.get('sort') as SortOption) || "relevance"
+    (searchParams.get('sort') as SortOption) || "popularity"
+  );
+  const [currentPage, setCurrentPage] = useState(
+    parseInt(searchParams.get('page') || '1')
   );
 
-  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
-  const fetchAllProducts = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      
-      const result = await getPaginatedProducts(currentPage, PRODUCTS_PER_PAGE);
-      setPaginatedData(result.products);
-      setTotalProducts(result.total);
-      setFilteredData([]);
-      
-    } catch (err) {
-      console.error("Error fetching products:", err);
-      setError("Failed to load products. Please try again later.");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [currentPage]);
-
-  const fetchFilteredProducts = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const params: ProductFilterParams = {
-        search: debouncedSearchTerm,
-        category: categoryFilter.length > 0 ? categoryFilter : undefined,
-        priceMin: priceRange[0] === 0 ? undefined : priceRange[0],
-        priceMax: priceRange[1] === 100 ? undefined : priceRange[1],
-        sort: sortOption !== "relevance" ? sortOption as SortOption : undefined,
-        page: currentPage,
-        pageSize: PRODUCTS_PER_PAGE,
-      };
-
-      // const result = await getFilteredProducts(params);
-      // setFilteredData(result.products);
-      // setTotalProducts(result.total);
-      // setPaginatedData([]);
-    } catch (err) {
-      console.error("Error fetching filtered products:", err);
-      setError("Failed to load products. Please try again later.");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [debouncedSearchTerm, categoryFilter, priceRange, sortOption, currentPage]);
-
+  // Update active category when route parameter changes
   useEffect(() => {
-    if (debouncedSearchTerm || categoryFilter.length > 0 || priceRange[0] !== 0 || priceRange[1] !== 100 || (sortOption && sortOption !== "relevance")) {
-      console.log("Filters applied, implement fetchFilteredProducts");
-      setFilteredData([]);
-      setTotalProducts(0);
-      setPaginatedData([]);
-    } else {
-      fetchAllProducts();
+    if (categoryId) {
+      setActiveCategory(categoryId);
     }
-  }, [fetchAllProducts, debouncedSearchTerm, categoryFilter, priceRange, sortOption]);
+  }, [categoryId]);
 
+  // Fetch products based on filters
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['products', activeCategory, debouncedSearchTerm, priceRange, sortOption, currentPage],
+    queryFn: async () => {
+      if (activeCategory !== "all") {
+        return getProductsByCategory(activeCategory, currentPage, PRODUCTS_PER_PAGE);
+      } else {
+        const filters: ProductFilterParams = {
+          search: debouncedSearchTerm || undefined,
+          priceMin: priceRange[0] > 0 ? priceRange[0] : undefined,
+          priceMax: priceRange[1] < 100 ? priceRange[1] : undefined,
+          sort: sortOption !== "relevance" ? sortOption as SortOption : undefined,
+          page: currentPage,
+          pageSize: PRODUCTS_PER_PAGE,
+        };
+        
+        return searchProducts(filters, filters.sort || "popularity", filters.page || 1, filters.pageSize || PRODUCTS_PER_PAGE);
+      }
+    }
+  });
+
+  // Update URL params based on filters
   useEffect(() => {
     const params = new URLSearchParams();
-    if (searchTerm) params.set('search', searchTerm);
-    if (categoryFilter.length > 0) {
-      categoryFilter.forEach(category => params.append('category', category));
+    
+    if (activeCategory !== "all") {
+      params.set('category', activeCategory);
     }
-    if (priceRange[0] !== 0) params.set('priceMin', priceRange[0].toString());
-    if (priceRange[1] !== 100) params.set('priceMax', priceRange[1].toString());
-    if (sortOption && sortOption !== "relevance") params.set('sort', sortOption);
-
+    
+    if (debouncedSearchTerm) {
+      params.set('search', debouncedSearchTerm);
+    }
+    
+    if (priceRange[0] > 0) {
+      params.set('priceMin', priceRange[0].toString());
+    }
+    
+    if (priceRange[1] < 100) {
+      params.set('priceMax', priceRange[1].toString());
+    }
+    
+    if (sortOption !== "relevance") {
+      params.set('sort', sortOption);
+    }
+    
+    if (currentPage > 1) {
+      params.set('page', currentPage.toString());
+    }
+    
     setSearchParams(params);
+  }, [activeCategory, debouncedSearchTerm, priceRange, sortOption, currentPage, setSearchParams]);
+
+  // Reset pagination when filters change
+  useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, categoryFilter, priceRange, sortOption, setSearchParams]);
+  }, [activeCategory, debouncedSearchTerm, priceRange, sortOption]);
 
-  const categories = ["Dry Fruits", "Spices", "Gift Boxes", "Premium Spices"];
-
-  const sortingOptions = [
-    { label: "Relevance", value: "relevance" },
-    { label: "Price: Low to High", value: "price-asc" },
-    { label: "Price: High to Low", value: "price-desc" },
-    { label: "Newest Arrivals", value: "newest" },
-  ];
-
-  const handlePageChange = (newPage: number) => {
-    setCurrentPage(newPage);
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
     window.scrollTo(0, 0);
   };
 
-  const handleCategoryChange = (category: string) => {
-    setCategoryFilter(prev =>
-      prev.includes(category)
-        ? prev.filter(c => c !== category)
-        : [...prev, category]
-    );
-  };
-
-  const clearFilters = () => {
+  const resetFilters = () => {
     setSearchTerm('');
-    setCategoryFilter([]);
     setPriceRange([0, 100]);
     setSortOption("relevance");
-    navigate('/shop');
+    
+    if (categoryId) {
+      // If we're on a category page, keep the category
+      setActiveCategory(categoryId);
+    } else {
+      setActiveCategory("all");
+      navigate('/shop');
+    }
   };
 
-  const productsToDisplay = filteredData.length > 0 ? filteredData : paginatedData;
-  const hasProducts = productsToDisplay.length > 0;
-  const totalPages = Math.ceil(totalProducts / PRODUCTS_PER_PAGE);
+  // Product categories for navigation
+  const categories = [
+    { id: "all", name: "All Products" },
+    { id: "dry-fruits", name: "Dry Fruits" },
+    { id: "spices", name: "Spices" },
+    { id: "premium-spices", name: "Premium Spices" },
+    { id: "gift-boxes", name: "Gift Boxes" },
+  ];
 
   return (
-    <div className="container mx-auto py-12">
-      <h1 className="text-3xl font-bold mb-6">Shop</h1>
-
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="md:col-span-1">
-          <Input
-            type="search"
-            placeholder="Search products..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-
-        <div className="md:col-span-1">
-          <h3 className="font-semibold mb-2">Category</h3>
-          {categories.map((category) => (
-            <div key={category} className="flex items-center space-x-2">
-              <Checkbox
-                id={`category-${category}`}
-                checked={categoryFilter.includes(category)}
-                onCheckedChange={() => handleCategoryChange(category)}
-              />
-              <label
-                htmlFor={`category-${category}`}
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                {category}
-              </label>
-            </div>
-          ))}
-        </div>
-
-        <div className="md:col-span-1">
-          <h3 className="font-semibold mb-2">Price Range</h3>
-          <div className="flex items-center justify-between">
-            <span>$0</span>
-            <span>$100+</span>
-          </div>
-          <Slider
-            defaultValue={priceRange}
-            max={100}
-            step={10}
-            onValueChange={(value) => setPriceRange(value)}
-          />
-          <div className="flex items-center justify-between mt-2">
-            <span>Min: ${priceRange[0]}</span>
-            <span>Max: ${priceRange[1] === 100 ? '100+' : priceRange[1]}</span>
+    <div className="min-h-screen bg-background">
+      <ShopHero 
+        activeCategory={activeCategory} 
+        categories={categories} 
+      />
+      
+      <div className="premium-container py-8">
+        {/* Mobile filter toggle */}
+        <div className="flex md:hidden items-center justify-between mb-4">
+          <Button 
+            variant="outline" 
+            className="flex items-center gap-2"
+            onClick={() => setIsFilterDrawerOpen(true)}
+          >
+            <SlidersHorizontal size={16} /> Filters
+          </Button>
+          
+          <div className="flex items-center gap-2">
+            <Button 
+              variant={viewMode === "grid" ? "default" : "outline"} 
+              size="icon"
+              onClick={() => setViewMode("grid")}
+              className="h-9 w-9"
+            >
+              <Grid2x2 size={16} />
+            </Button>
+            <Button 
+              variant={viewMode === "list" ? "default" : "outline"} 
+              size="icon"
+              onClick={() => setViewMode("list")}
+              className="h-9 w-9"
+            >
+              <List size={16} />
+            </Button>
           </div>
         </div>
-
-        <div className="md:col-span-1">
-          <Select 
-            value={sortOption}
-            onValueChange={(value) => setSortOption(value as SortOption | "relevance")}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent>
-              {sortingOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        
+        {/* Active filters display */}
+        <ActiveFilters 
+          activeCategory={activeCategory}
+          priceRange={priceRange}
+          categories={categories}
+          setActiveCategory={setActiveCategory}
+          setPriceRange={setPriceRange}
+        />
+        
+        {/* Desktop layout */}
+        <div className="flex flex-col md:flex-row gap-8">
+          {/* Sidebar filters - desktop only */}
+          <div className="hidden md:block w-1/4">
+            <FilterSidebar 
+              categories={categories}
+              activeCategory={activeCategory}
+              priceRange={priceRange}
+              setPriceRange={setPriceRange}
+            />
+          </div>
+          
+          {/* Main content area */}
+          <div className="w-full md:w-3/4">
+            {/* Toolbar (searching, sorting, view switching) */}
+            <ShopToolbar 
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              sortOption={sortOption}
+              setSortOption={setSortOption}
+              viewMode={viewMode}
+              setViewMode={setViewMode}
+            />
+            
+            {/* Products display */}
+            <ProductsDisplay 
+              loading={isLoading}
+              filteredProducts={data?.products || []}
+              viewMode={viewMode}
+              resetFilters={resetFilters}
+              currentPage={currentPage}
+              totalPages={Math.ceil((data?.total || 0) / PRODUCTS_PER_PAGE)}
+              onPageChange={handlePageChange}
+              itemsPerPage={PRODUCTS_PER_PAGE}
+            />
+          </div>
         </div>
       </div>
-
-      <Button variant="outline" onClick={clearFilters} className="mb-6">
-        Clear Filters
-      </Button>
-
-      {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {Array(12).fill(0).map((_, index) => (
-            <div key={index} className="bg-gray-100 rounded-lg p-4 h-[350px] animate-pulse">
-              <div className="bg-gray-200 h-[200px] mb-4 rounded-md"></div>
-              <div className="bg-gray-200 h-6 w-3/4 mb-2 rounded"></div>
-              <div className="bg-gray-200 h-4 w-1/2 mb-2 rounded"></div>
-              <div className="bg-gray-200 h-6 w-1/4 rounded"></div>
-            </div>
-          ))}
-        </div>
-      ) : error ? (
-        <div className="text-center py-8">
-          <h3 className="text-lg font-medium text-gray-900">Error loading products</h3>
-          <p className="mt-2 text-gray-500">{error}</p>
-        </div>
-      ) : !hasProducts ? (
-        <div className="text-center py-8">
-          <h3 className="text-lg font-medium text-gray-900">No products found</h3>
-          <p className="mt-2 text-gray-500">
-            {debouncedSearchTerm ? 'Try adjusting your search or filters.' : 'We are currently updating our inventory. Please check back soon.'}
-          </p>
-        </div>
-      ) : (
-        <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {productsToDisplay.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-
-          {totalPages > 1 && (
-            <div className="flex justify-center mt-8">
-              <Button
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                variant="outline"
-                className="mr-2"
-              >
-                Previous
-              </Button>
-              <Button
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                variant="outline"
-              >
-                Next
-              </Button>
-            </div>
-          )}
-        </>
-      )}
+      
+      {/* Mobile filter drawer */}
+      <Sheet open={isFilterDrawerOpen} onOpenChange={setIsFilterDrawerOpen}>
+        <MobileFilterDrawer 
+          categories={categories}
+          activeCategory={activeCategory}
+          priceRange={priceRange}
+          setPriceRange={setPriceRange}
+        />
+      </Sheet>
     </div>
   );
 };

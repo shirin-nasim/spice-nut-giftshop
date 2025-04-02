@@ -1,7 +1,8 @@
 
 import React from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { SheetHeader, SheetTitle, SheetContent } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
 
 interface MobileFilterDrawerProps {
   categories: {
@@ -19,6 +20,16 @@ const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
   priceRange,
   setPriceRange,
 }) => {
+  const navigate = useNavigate();
+
+  const handleCategoryClick = (categoryId: string) => {
+    if (categoryId === "all") {
+      navigate("/shop");
+    } else {
+      navigate(`/shop/category/${categoryId}`);
+    }
+  };
+
   return (
     <SheetContent side="left">
       <SheetHeader>
@@ -29,16 +40,17 @@ const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
         <ul className="space-y-2">
           {categories.map(category => (
             <li key={category.id}>
-              <Link
-                to={category.id === "all" ? "/shop" : `/shop?category=${category.id}`}
-                className={`block py-2 px-3 rounded-md transition ${
+              <Button
+                variant="ghost"
+                className={`w-full justify-start py-2 px-3 h-auto ${
                   activeCategory === category.id
                     ? "bg-brand-beige text-brand-brown font-medium"
                     : "text-muted-foreground hover:text-foreground hover:bg-brand-beige-light"
                 }`}
+                onClick={() => handleCategoryClick(category.id)}
               >
                 {category.name}
-              </Link>
+              </Button>
             </li>
           ))}
         </ul>
@@ -48,7 +60,7 @@ const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
           <div className="px-2">
             <div className="flex mb-1 justify-between">
               <span className="text-sm text-muted-foreground">${priceRange[0]}</span>
-              <span className="text-sm text-muted-foreground">${priceRange[1]}</span>
+              <span className="text-sm text-muted-foreground">${priceRange[1] === 100 ? "100+" : priceRange[1]}</span>
             </div>
             <div className="flex flex-col space-y-4">
               <input

@@ -1,92 +1,82 @@
 
 import React from "react";
-import { Filter, Grid, List } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetTrigger } from "@/components/ui/sheet";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import MobileFilterDrawer from "./MobileFilterDrawer";
+import { Grid2x2, List } from "lucide-react";
+import { SortOption } from "@/services/products/searchProductService";
 
 interface ShopToolbarProps {
-  productsCount: number;
-  sortBy: string;
-  setSortBy: React.Dispatch<React.SetStateAction<string>>;
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
+  sortOption: SortOption | "relevance";
+  setSortOption: (option: SortOption | "relevance") => void;
   viewMode: "grid" | "list";
-  setViewMode: React.Dispatch<React.SetStateAction<"grid" | "list">>;
-  categories: { id: string; name: string; }[];
-  activeCategory: string;
-  priceRange: [number, number];
-  setPriceRange: React.Dispatch<React.SetStateAction<[number, number]>>;
+  setViewMode: (mode: "grid" | "list") => void;
 }
 
 const ShopToolbar: React.FC<ShopToolbarProps> = ({
-  productsCount,
-  sortBy,
-  setSortBy,
+  searchTerm,
+  setSearchTerm,
+  sortOption,
+  setSortOption,
   viewMode,
   setViewMode,
-  categories,
-  activeCategory,
-  priceRange,
-  setPriceRange
 }) => {
+  const sortingOptions = [
+    { label: "Relevance", value: "relevance" },
+    { label: "Price: Low to High", value: "price-asc" },
+    { label: "Price: High to Low", value: "price-desc" },
+    { label: "Rating", value: "rating-desc" },
+    { label: "Newest Arrivals", value: "newest" },
+    { label: "Popularity", value: "popularity" },
+  ];
+
   return (
-    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-      <div className="flex items-center">
-        <span className="text-muted-foreground mr-2">{productsCount} products</span>
-        
-        {/* Mobile Filter Button */}
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="outline" size="sm" className="lg:hidden flex items-center gap-2">
-              <Filter className="h-4 w-4" />
-              <span>Filters</span>
-            </Button>
-          </SheetTrigger>
-          <MobileFilterDrawer 
-            categories={categories}
-            activeCategory={activeCategory}
-            priceRange={priceRange}
-            setPriceRange={setPriceRange}
-          />
-        </Sheet>
+    <div className="flex flex-col md:flex-row gap-4 mb-6">
+      <div className="w-full md:w-1/2">
+        <Input
+          type="search"
+          placeholder="Search products..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full"
+        />
       </div>
       
-      <div className="flex items-center space-x-3 w-full sm:w-auto">
-        <Select value={sortBy} onValueChange={setSortBy}>
-          <SelectTrigger className="w-full sm:w-[180px]">
+      <div className="flex items-center justify-between gap-4 w-full md:w-1/2">
+        <Select 
+          value={sortOption} 
+          onValueChange={(value) => setSortOption(value as SortOption | "relevance")}
+        >
+          <SelectTrigger className="w-full md:w-[180px]">
             <SelectValue placeholder="Sort by" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="featured">Featured</SelectItem>
-            <SelectItem value="price-low-high">Price: Low to High</SelectItem>
-            <SelectItem value="price-high-low">Price: High to Low</SelectItem>
-            <SelectItem value="newest">Newest</SelectItem>
-            <SelectItem value="rating">Top Rated</SelectItem>
+            {sortingOptions.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
         
-        <div className="hidden sm:flex border rounded-md">
+        <div className="hidden md:flex items-center gap-2">
           <Button
-            variant="ghost"
+            variant={viewMode === "grid" ? "default" : "outline"}
             size="icon"
-            className={`rounded-none rounded-l-md ${viewMode === 'grid' ? 'bg-muted' : ''}`}
             onClick={() => setViewMode("grid")}
+            className="h-9 w-9"
           >
-            <Grid className="h-4 w-4" />
+            <Grid2x2 size={16} />
           </Button>
           <Button
-            variant="ghost"
+            variant={viewMode === "list" ? "default" : "outline"}
             size="icon"
-            className={`rounded-none rounded-r-md ${viewMode === 'list' ? 'bg-muted' : ''}`}
             onClick={() => setViewMode("list")}
+            className="h-9 w-9"
           >
-            <List className="h-4 w-4" />
+            <List size={16} />
           </Button>
         </div>
       </div>

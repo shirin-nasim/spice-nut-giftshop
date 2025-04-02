@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Product } from "@/types/supabase";
 
@@ -61,6 +62,14 @@ export const searchProducts = async (
     
     if (filters.maxPrice !== undefined) {
       query = query.lte("price", filters.maxPrice);
+    }
+    
+    if (filters.priceMin !== undefined) {
+      query = query.gte("price", filters.priceMin);
+    }
+    
+    if (filters.priceMax !== undefined) {
+      query = query.lte("price", filters.priceMax);
     }
     
     if (filters.rating !== undefined) {
@@ -155,24 +164,28 @@ export const searchProducts = async (
  * Fetch products by category
  */
 export const getProductsByCategory = async (
-  category: string,
+  categoryId: string,
   page: number = 1,
   pageSize: number = 12
 ): Promise<{ products: Product[]; total: number }> => {
   try {
-    console.info(`Fetching products by category: ${category}`);
+    console.info(`Fetching products by category ID: ${categoryId}`);
     
     // For "all" category, return all products
-    if (category === "all") {
+    if (categoryId === "all") {
       return searchProducts({}, "popularity", page, pageSize);
     }
     
-    // Map frontend URL parameter to database categories
-    let dbCategory = category;
+    // Map URL-friendly category IDs to database categories
+    let dbCategory = categoryId;
     
     // Convert URL-friendly format to database format
-    if (category === "dry-fruits") {
+    if (categoryId === "dry-fruits") {
       dbCategory = "dry fruits";
+    } else if (categoryId === "premium-spices") {
+      dbCategory = "premium spices";
+    } else if (categoryId === "gift-boxes") {
+      dbCategory = "gift boxes";
     }
     
     const result = await searchProducts(
@@ -182,11 +195,11 @@ export const getProductsByCategory = async (
       pageSize
     );
     
-    console.info(`Fetched products for category ${category}, page ${page}, total: ${result.total}`);
+    console.info(`Fetched ${result.products.length} products for category ${categoryId}, total: ${result.total}`);
     
     return result;
   } catch (error) {
-    console.error(`Error fetching products for category ${category}:`, error);
+    console.error(`Error fetching products for category ${categoryId}:`, error);
     return { products: [], total: 0 };
   }
 };

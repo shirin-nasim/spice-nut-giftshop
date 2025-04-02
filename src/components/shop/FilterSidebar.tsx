@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 interface FilterSidebarProps {
   categories: {
@@ -18,22 +18,32 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
   priceRange,
   setPriceRange,
 }) => {
+  const navigate = useNavigate();
+
+  const handleCategoryClick = (categoryId: string) => {
+    if (categoryId === "all") {
+      navigate("/shop");
+    } else {
+      navigate(`/shop/category/${categoryId}`);
+    }
+  };
+
   return (
     <div className="bg-white p-6 rounded-xl shadow-premium-sm">
       <h3 className="font-semibold mb-4">Categories</h3>
       <ul className="space-y-2">
         {categories.map(category => (
           <li key={category.id}>
-            <Link
-              to={category.id === "all" ? "/shop" : `/shop?category=${category.id}`}
-              className={`block py-2 px-3 rounded-md transition ${
+            <button
+              onClick={() => handleCategoryClick(category.id)}
+              className={`block w-full text-left py-2 px-3 rounded-md transition ${
                 activeCategory === category.id
                   ? "bg-brand-beige text-brand-brown font-medium"
                   : "text-muted-foreground hover:text-foreground hover:bg-brand-beige-light"
               }`}
             >
               {category.name}
-            </Link>
+            </button>
           </li>
         ))}
       </ul>
@@ -43,7 +53,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
         <div className="px-2">
           <div className="flex mb-1 justify-between">
             <span className="text-sm text-muted-foreground">${priceRange[0]}</span>
-            <span className="text-sm text-muted-foreground">${priceRange[1]}</span>
+            <span className="text-sm text-muted-foreground">${priceRange[1] === 100 ? "100+" : priceRange[1]}</span>
           </div>
           <div className="flex items-center space-x-2">
             <input

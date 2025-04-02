@@ -2,6 +2,7 @@
 import React from "react";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 interface ActiveFiltersProps {
   activeCategory: string;
@@ -18,6 +19,8 @@ const ActiveFilters: React.FC<ActiveFiltersProps> = ({
   setActiveCategory,
   setPriceRange,
 }) => {
+  const navigate = useNavigate();
+  
   if (activeCategory === "all" && priceRange[0] === 0 && priceRange[1] === 100) {
     return null;
   }
@@ -31,7 +34,10 @@ const ActiveFilters: React.FC<ActiveFiltersProps> = ({
             variant="ghost"
             size="icon"
             className="h-5 w-5 ml-1 hover:bg-transparent"
-            onClick={() => setActiveCategory("all")}
+            onClick={() => {
+              setActiveCategory("all");
+              navigate("/shop");
+            }}
           >
             <X className="h-3 w-3" />
           </Button>
@@ -40,7 +46,7 @@ const ActiveFilters: React.FC<ActiveFiltersProps> = ({
       
       {(priceRange[0] > 0 || priceRange[1] < 100) && (
         <div className="bg-brand-beige-light text-foreground text-sm rounded-full px-3 py-1 flex items-center">
-          <span>Price: ${priceRange[0]} - ${priceRange[1]}</span>
+          <span>Price: ${priceRange[0]} - ${priceRange[1] === 100 ? "100+" : priceRange[1]}</span>
           <Button
             variant="ghost"
             size="icon"
@@ -58,6 +64,7 @@ const ActiveFilters: React.FC<ActiveFiltersProps> = ({
         onClick={() => {
           setActiveCategory("all");
           setPriceRange([0, 100]);
+          navigate("/shop");
         }}
       >
         Clear All Filters
